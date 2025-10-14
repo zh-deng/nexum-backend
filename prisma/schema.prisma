@@ -8,9 +8,122 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  username  String
-  password  String
-  createdAt DateTime @default(now())
+  id           String        @id @default(cuid())
+  email        String        @unique
+  username     String
+  password     String
+  applications Application[]
+  createdAt    DateTime      @default(now())
+}
+
+enum ApplicationStatus {
+  DRAFT
+  APPLIED
+  INTERVIEW
+  OFFER
+  HIRED
+  DECLINED_OFFER
+  REJECTED
+  GHOSTED
+  WITHDRAWN
+}
+
+enum WorkLocation {
+  ON_SITE
+  REMOTE
+  HYBRID
+  UNSURE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model Application {
+  id             String            @id @default(cuid())
+  jobTitle       String
+  companyId      String
+  company        Company           @relation(fields: [companyId], references: [id])
+  jobLink        String?
+  jobDescription String?
+  workLocation   WorkLocation      @default(UNSURE)
+  priority       Priority          @default(MEDIUM)
+  notes          String?
+  status         ApplicationStatus @default(DRAFT)
+  userId         String
+  user           User              @relation(fields: [userId], references: [id])
+  fileUrls       String[]
+  logItems       LogItem[]
+  reminders      Reminder[]
+  interviews     Interview[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+}
+
+enum InterviewStatus {
+  UPCOMING
+  DONE
+}
+
+model Interview {
+  id            String          @id @default(cuid())
+  date          DateTime?
+  notes         String?
+  status        InterviewStatus @default(UPCOMING)
+  applicationId String
+  application   Application     @relation(fields: [applicationId], references: [id])
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model Company {
+  id           String        @id @default(cuid())
+  name         String
+  website      String?
+  street       String?
+  city         String?
+  state        String?
+  zipCode      String?
+  country      String?
+  industry     String?
+  companySize  String?
+  contactName  String?
+  contactEmail String?
+  contactPhone String?
+  notes        String?
+  logoUrl      String?
+  applications Application[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+// Logs the status changes of applications
+model LogItem {
+  id            String            @id @default(cuid())
+  status        ApplicationStatus
+  notes         String?
+  applicationId String
+  application   Application       @relation(fields: [applicationId], references: [id])
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}
+
+enum ReminderStatus {
+  ACTIVE
+  STOPPED
+  DONE
+}
+
+// Used to track notifications
+model Reminder {
+  id            String         @id @default(cuid())
+  alarmDate     DateTime
+  message       String?
+  status        ReminderStatus @default(ACTIVE)
+  applicationId String
+  application   Application    @relation(fields: [applicationId], references: [id])
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 }
