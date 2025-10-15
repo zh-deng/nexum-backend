@@ -17,7 +17,7 @@ export class ApplicationService {
       create: company,
     });
 
-    return this.prisma.application.create({
+    return await this.prisma.application.create({
       data: {
         ...applicationdata,
         userId,
@@ -34,7 +34,7 @@ export class ApplicationService {
 
     // Catch error if there is no application with this id
     try {
-      return this.prisma.application.update({
+      return await this.prisma.application.update({
         where: {
           id: applicationId,
         },
@@ -59,7 +59,7 @@ export class ApplicationService {
   }
 
   async findAll(userId: string) {
-    return this.prisma.application.findMany({
+    return await this.prisma.application.findMany({
       where: { userId },
       include: {
         company: true,
