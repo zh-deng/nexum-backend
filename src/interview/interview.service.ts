@@ -9,7 +9,7 @@ export class InterviewService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: CreateInterviewDto) {
-    return this.prisma.interview.create({
+    return await this.prisma.interview.create({
       data,
     });
   }
@@ -29,7 +29,7 @@ export class InterviewService {
   }
 
   async findAll(applicationId: string) {
-    return this.prisma.interview.findMany({
+    return await this.prisma.interview.findMany({
       where: { applicationId },
     });
   }
