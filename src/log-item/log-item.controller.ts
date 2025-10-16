@@ -15,8 +15,8 @@ export class LogItemController {
     return this.logItemService.create(dto);
   }
 
-  @Patch()
-  update(@Param() logItemId: string, dto: UpdateLogItemDto) {
+  @Patch(':id')
+  update(@Param('id') logItemId: string, @Body() dto: UpdateLogItemDto) {
     return this.logItemService.update(logItemId, dto);
   }
 

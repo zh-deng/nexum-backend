@@ -15,8 +15,8 @@ export class ReminderController {
     return this.reminderService.create(dto);
   }
 
-  @Patch()
-  update(@Param() reminderId: string, dto: UpdateReminderDto) {
+  @Patch(':id')
+  update(@Param('id') reminderId: string, @Body() dto: UpdateReminderDto) {
     return this.reminderService.update(reminderId, dto);
   }
 
