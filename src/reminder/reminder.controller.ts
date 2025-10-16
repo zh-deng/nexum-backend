@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { ReminderService } from './reminder.service';
 import { CreateReminderDto } from './dtos/create-reminder.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { UpdateReminderDto } from './dtos/update-reminder.dto';
 
 @ApiTags('reminders')
 @ApiBearerAuth()
@@ -12,6 +13,11 @@ export class ReminderController {
   @Post()
   create(@Body() dto: CreateReminderDto) {
     return this.reminderService.create(dto);
+  }
+
+  @Patch()
+  update(@Param() reminderId: string, dto: UpdateReminderDto) {
+    return this.reminderService.update(reminderId, dto);
   }
 
   @Get()
