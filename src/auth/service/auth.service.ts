@@ -1,53 +1,45 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../../prisma/prisma.service';
-import * as bcrypt from 'bcrypt';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { CreateUserDto } from '../../user/dtos/create-user.dto';
+import { UserService } from '../../user/user.service';
+import { UpdateUserDto } from '../../user/dtos/update-user.dto';
+import { LoginDto } from '../dto/login.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private prisma: PrismaService,
-    private jwt: JwtService
+    private userService: UserService,
+    private jwtService: JwtService
   ) {}
 
   // Handles user registration
-  async signup(email: string, username: string, password: string) {
-    const hashedPassword = await bcrypt.hash(password, 10);
+  async signup(dto: CreateUserDto) {
+    const existingUser = await this.userService.findUserByEmail(dto.email);
+    if (existingUser) {
+      throw new Error('User already exists');
+    }
 
-    const user = await this.prisma.user.create({
-      data: {
-        email,
-        username,
-        password: hashedPassword,
-      },
-    });
-
-    return {
-      id: user.id,
-      email: user.email,
-      username: user.username,
-      createdAt: user.createdAt,
-    };
+    return this.userService.create(dto);
   }
 
   // Handles user login and token generation
-  async login(email: string, password: string) {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        email,
-      },
-    });
-    if (!user) throw new Error('Invalid credentials');
+  async login(dto: LoginDto) {
+    const user = await this.userService.findUserByEmail(dto.email);
+    if (!user) throw new UnauthorizedException('Invalid credentials');
 
-    const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) throw new Error('Invalid credentials');
+    const isValid = await this.userService.validatePassword(dto.password, user.password);
+    if (!isValid) throw new UnauthorizedException('Invalid credentials');
 
     // Create token with userId as the subject (identifier)
-    const token = this.jwt.sign({
+    const token = this.jwtService.sign({
       sub: user.id,
       email: user.email,
     });
 
-    return { acccess_token: token };
+    return { access_token: token };
+  }
+
+  async updateUser(userId: string, dto: UpdateUserDto) {
+    return this.userService.update(userId, dto);
   }
 }
