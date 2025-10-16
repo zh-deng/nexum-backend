@@ -1,13 +1,12 @@
 import { IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
 import { InterviewStatus } from '../../types/enums';
 import { Type } from 'class-transformer';
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateInterviewDto {
-  @ApiPropertyOptional()
-  @IsOptional()
+  @ApiProperty()
   @IsString()
-  applicationId?: string;
+  applicationId: string;
 
   @ApiPropertyOptional()
   @IsOptional()

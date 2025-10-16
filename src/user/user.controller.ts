@@ -1,8 +1,9 @@
-import { Body, Controller, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Patch, Post } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { type AuthUser, CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('users')
 @ApiBearerAuth()
@@ -15,8 +16,8 @@ export class UserController {
     return this.userService.create(dto);
   }
 
-  @Patch(':id')
-  update(@Param('id') userId: string, @Body() dto: UpdateUserDto) {
-    return this.userService.update(userId, dto);
+  @Patch()
+  update(@CurrentUser() user: AuthUser, @Body() dto: UpdateUserDto) {
+    return this.userService.update(user.id, dto);
   }
 }

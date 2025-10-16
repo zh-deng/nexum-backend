@@ -17,8 +17,12 @@ export class ApplicationController {
   }
 
   @Patch(':id')
-  update(@Param('id') applicationId: string, @Body() dto: UpdateApplicationDto) {
-    return this.applicationService.update(applicationId, dto);
+  update(
+    @Param('id') applicationId: string,
+    @CurrentUser() user: AuthUser,
+    @Body() dto: UpdateApplicationDto
+  ) {
+    return this.applicationService.update(applicationId, user.id, dto);
   }
 
   @Get()
