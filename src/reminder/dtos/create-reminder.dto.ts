@@ -5,6 +5,10 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateReminderDto {
   @ApiProperty()
+  @IsString()
+  applicationId: string;
+
+  @ApiProperty()
   @Type(() => Date)
   @IsDate()
   alarmDate: Date;
@@ -14,12 +18,8 @@ export class CreateReminderDto {
   @IsString()
   message?: string;
 
-  @ApiPropertyOptional({enum: ReminderStatus})
+  @ApiPropertyOptional({ enum: ReminderStatus })
   @IsOptional()
   @IsEnum(ReminderStatus)
   status?: ReminderStatus;
-
-  @ApiProperty()
-  @IsString()
-  applicationId: string;
 }

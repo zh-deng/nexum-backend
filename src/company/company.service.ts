@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateCompanyDto } from './dtos/create-company.dto';
 import { UpdateCompanyDto } from './dtos/update-company.dto';
@@ -8,13 +8,35 @@ import { Prisma } from '@prisma/client';
 export class CompanyService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: CreateCompanyDto) {
-    return await this.prisma.company.create({
-      data,
+  async create(userId: string, data: CreateCompanyDto) {
+    // Upsert used to avoid race conditions of multiple requests at the same time
+    return await this.prisma.company.upsert({
+      where: {
+        name_userId: {
+          name: data.name,
+          userId,
+        },
+      },
+      update: {},
+      create: {
+        ...data,
+        userId,
+      },
     });
   }
 
-  async update(companyId: string, data: UpdateCompanyDto) {
+  async update(companyId: string, userId: string, data: UpdateCompanyDto) {
+    const company = await this.prisma.company.findFirst({
+      where: {
+        id: companyId,
+        userId,
+      },
+    });
+
+    if (!company) {
+      throw new NotFoundException(`Company not found or access denied`);
+    }
+
     try {
       return await this.prisma.company.update({
         where: {
@@ -30,8 +52,11 @@ export class CompanyService {
     }
   }
 
-  async findAll() {
+  async findAll(userId: string) {
     return await this.prisma.company.findMany({
+      where: {
+        userId,
+      },
       include: {
         applications: true,
       },

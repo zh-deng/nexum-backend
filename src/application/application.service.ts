@@ -11,10 +11,19 @@ export class ApplicationService {
   async create(userId: string, data: CreateApplicationDto) {
     const { company, ...applicationdata } = data;
 
+    // Upsert to avoid race conditions of multiple requests at the same time
     const companyRecord = await this.prisma.company.upsert({
-      where: { name: company.name },
+      where: {
+        name_userId: {
+          name: company.name,
+          userId,
+        },
+      },
       update: {},
-      create: company,
+      create: {
+        ...company,
+        userId,
+      },
     });
 
     return await this.prisma.application.create({
@@ -29,7 +38,18 @@ export class ApplicationService {
     });
   }
 
-  async update(applicationId: string, data: UpdateApplicationDto) {
+  async update(applicationId: string, userId: string, data: UpdateApplicationDto) {
+    const application = await this.prisma.application.findUnique({
+      where: {
+        id: applicationId,
+      },
+      select: { userId: true },
+    });
+
+    if (!application || application.userId !== userId) {
+      throw new NotFoundException(`Application not found or access denied`);
+    }
+
     const { company, ...applicationData } = data;
 
     // Catch error if there is no application with this id

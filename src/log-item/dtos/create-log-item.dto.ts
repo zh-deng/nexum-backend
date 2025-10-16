@@ -3,6 +3,10 @@ import { ApplicationStatus } from '../../types/enums';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateLogItemDto {
+  @ApiProperty()
+  @IsString()
+  applicationId: string;
+
   @ApiProperty({ enum: ApplicationStatus })
   @IsEnum(ApplicationStatus)
   status: ApplicationStatus;
@@ -11,8 +15,4 @@ export class CreateLogItemDto {
   @IsOptional()
   @IsString()
   notes?: string;
-
-  @ApiProperty()
-  @IsString()
-  applicationId: string;
 }

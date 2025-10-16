@@ -1,9 +1,13 @@
 import { IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
 import { ReminderStatus } from '../../types/enums';
 import { Type } from 'class-transformer';
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateReminderDto {
+  @ApiProperty()
+  @IsString()
+  applicationId: string;
+
   @ApiPropertyOptional()
   @IsOptional()
   @Type(() => Date)
@@ -15,13 +19,8 @@ export class UpdateReminderDto {
   @IsString()
   message?: string;
 
-  @ApiPropertyOptional({enum: ReminderStatus})
+  @ApiPropertyOptional({ enum: ReminderStatus })
   @IsOptional()
   @IsEnum(ReminderStatus)
   status?: ReminderStatus;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  applicationId?: string;
 }
