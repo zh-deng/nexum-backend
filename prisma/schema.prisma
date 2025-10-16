@@ -13,6 +13,7 @@ model User {
   username     String
   password     String
   applications Application[]
+  companies    Company[]
   createdAt    DateTime      @default(now())
 }
 
@@ -80,7 +81,9 @@ model Interview {
 
 model Company {
   id           String        @id @default(cuid())
-  name         String        @unique
+  name         String
+  userId       String
+  user         User          @relation(fields: [userId], references: [id])
   website      String?
   street       String?
   city         String?
@@ -97,6 +100,8 @@ model Company {
   applications Application[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+
+  @@unique([name, userId])
 }
 
 // Logs the status changes of applications

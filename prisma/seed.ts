@@ -20,6 +20,7 @@ async function main(): Promise<void> {
       city: 'Berlin',
       country: 'Germany',
       industry: 'Tech',
+      userId: user.id,
     },
   });
 
@@ -29,6 +30,7 @@ async function main(): Promise<void> {
       city: 'Munich',
       country: 'Germany',
       industry: 'Finance',
+      userId: user.id,
     },
   });
 
@@ -38,6 +40,7 @@ async function main(): Promise<void> {
       city: 'Hamburg',
       country: 'Germany',
       industry: 'Software',
+      userId: user.id,
     },
   });
 
