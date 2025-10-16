@@ -2,7 +2,10 @@ import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { LogItemService } from './log-item.service';
 import { CreateLogItemDto } from './dtos/create-log-item.dto';
 import { UpdateLogItemDto } from './dtos/update-log-item.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('log-items')
+@ApiBearerAuth()
 @Controller('log-items')
 export class LogItemController {
   constructor(private readonly logItemService: LogItemService) {}

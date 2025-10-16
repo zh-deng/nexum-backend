@@ -2,7 +2,10 @@ import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { InterviewService } from './interview.service';
 import { CreateInterviewDto } from './dtos/create-interview.dto';
 import { UpdateInterviewDto } from './dtos/update-interview.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('interviews')
+@ApiBearerAuth()
 @Controller('interviews')
 export class InterviewController {
   constructor(private readonly interviewService: InterviewService) {}
