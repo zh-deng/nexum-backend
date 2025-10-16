@@ -7,6 +7,7 @@ import { ReminderModule } from './reminder/reminder.module';
 import { LogItemModule } from './log-item/log-item.module';
 import { InterviewModule } from './interview/interview.module';
 import { CompanyModule } from './company/company.module';
+import { ApplicationModule } from './application/application.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { CompanyModule } from './company/company.module';
       isGlobal: true,
     }),
     AuthModule,
+    ApplicationModule,
     ReminderModule,
     LogItemModule,
     InterviewModule,

@@ -3,7 +3,10 @@ import { ApplicationService } from './application.service';
 import { CreateApplicationDto } from './dtos/create-application.dto';
 import { type AuthUser, CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UpdateApplicationDto } from './dtos/update-application.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('applications')
+@ApiBearerAuth()
 @Controller('applications')
 export class ApplicationController {
   constructor(private readonly applicationService: ApplicationService) {}
@@ -13,7 +16,7 @@ export class ApplicationController {
     return this.applicationService.create(user.id, dto);
   }
 
-  @Patch()
+  @Patch(':id')
   update(@Param('id') applicationId: string, @Body() dto: UpdateApplicationDto) {
     return this.applicationService.update(applicationId, dto);
   }
