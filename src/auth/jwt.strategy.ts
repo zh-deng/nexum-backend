@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PrismaService } from '../../prisma/prisma.service';
+import { Request } from 'express';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -14,7 +15,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!secret) throw new Error('JWT_SECRET is not defined');
 
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+        (req: Request) => {
+          const token = (req.cookies as { access_token?: string })?.access_token;
+          return token ?? null;
+        },
+      ]),
       secretOrKey: secret,
     });
   }
