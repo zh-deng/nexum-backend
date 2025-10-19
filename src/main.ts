@@ -33,7 +33,8 @@ async function bootstrap() {
   const reflector = app.get(Reflector);
   app.useGlobalGuards(new JwtAuthGuard(reflector));
 
-  await app.listen(env.PORT);
+  const port = env.PORT || 3000;
+  await app.listen(port);
 }
 
 bootstrap().catch((err) => {
