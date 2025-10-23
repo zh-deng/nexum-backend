@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: nexum-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: nexumdb
+    ports:
+      - '5433:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: .
+    container_name: nexum-backend
+    restart: always
+    ports:
+      - '5000:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+        restart: true
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgres://postgres:password@postgres:5432/nexumdb
+      JWT_SECRET: ffe48445dc7be67ba4d1f1dfb4f144e49a8d0417e3bf3746668e0a67c13176e1
+
+volumes:
+  pgdata:
