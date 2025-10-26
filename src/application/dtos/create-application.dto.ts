@@ -1,4 +1,12 @@
-import { IsArray, IsEnum, IsOptional, IsString, IsUrl, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsUrl,
+  ValidateNested,
+} from 'class-validator';
 import { ApplicationStatus, Priority, WorkLocation } from '../../types/enums';
 import { CreateCompanyDto } from '../../company/dtos/create-company.dto';
 import { Type } from 'class-transformer';
@@ -38,6 +46,11 @@ export class CreateApplicationDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  favorited?: boolean;
 
   @ApiPropertyOptional({ enum: ApplicationStatus })
   @IsOptional()

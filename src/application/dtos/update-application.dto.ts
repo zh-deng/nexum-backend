@@ -1,4 +1,12 @@
-import { IsArray, IsEnum, IsOptional, IsString, IsUrl, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsUrl,
+  ValidateNested,
+} from 'class-validator';
 import { Priority, WorkLocation } from '../../types/enums';
 import { ApplicationStatus } from '@prisma/client';
 import { UpdateCompanyDto } from '../../company/dtos/update-company.dto';
@@ -41,6 +49,11 @@ export class UpdateApplicationDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  favorited?: boolean;
 
   @ApiPropertyOptional({ enum: ApplicationStatus })
   @IsOptional()
