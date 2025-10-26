@@ -55,6 +55,7 @@ model Application {
   status         ApplicationStatus @default(DRAFT)
   userId         String
   user           User              @relation(fields: [userId], references: [id])
+  favorited      Boolean?           @default(false)
   fileUrls       String[]
   logItems       LogItem[]
   reminders      Reminder[]
