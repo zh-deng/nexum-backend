@@ -75,7 +75,7 @@ model Interview {
   notes         String?
   status        InterviewStatus @default(UPCOMING)
   applicationId String
-  application   Application     @relation(fields: [applicationId], references: [id])
+  application   Application     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 }
@@ -112,7 +112,7 @@ model LogItem {
   notes         String?
   date          DateTime?         @default(now())
   applicationId String
-  application   Application       @relation(fields: [applicationId], references: [id])
+  application   Application       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 }
@@ -130,7 +130,7 @@ model Reminder {
   message       String?
   status        ReminderStatus @default(ACTIVE)
   applicationId String
-  application   Application    @relation(fields: [applicationId], references: [id])
+  application   Application    @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }
