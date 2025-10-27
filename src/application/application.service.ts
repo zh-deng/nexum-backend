@@ -125,10 +125,29 @@ export class ApplicationService {
       throw new NotFoundException(`Application not found or access denied`);
     }
 
-    return this.prisma.application.update({
+    return await this.prisma.application.update({
       where: { id: applicationId },
       data: { favorited: !application.favorited },
       select: { id: true, favorited: true },
+    });
+  }
+
+  async delete(applicationId: string, userId: string) {
+    const application = await this.prisma.application.findUnique({
+      where: {
+        id: applicationId,
+      },
+      select: { userId: true },
+    });
+
+    if (!application || application.userId !== userId) {
+      throw new NotFoundException(`Application not found or access denied`);
+    }
+
+    return await this.prisma.application.delete({
+      where: {
+        id: applicationId,
+      },
     });
   }
 
