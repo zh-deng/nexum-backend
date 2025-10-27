@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { ApplicationService } from './application.service';
 import { CreateApplicationDto } from './dtos/create-application.dto';
 import { type AuthUser, CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -26,8 +26,13 @@ export class ApplicationController {
   }
 
   @Patch(':id/favorite')
-  async toggleFavorite(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+  toggleFavorite(@Param('id') id: string, @CurrentUser() user: AuthUser) {
     return this.applicationService.toggleFavorite(id, user.id);
+  }
+
+  @Delete(':id')
+  delete(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.applicationService.delete(id, user.id);
   }
 
   @Get()
