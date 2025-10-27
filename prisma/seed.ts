@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { ApplicationStatus } from '../src/types/enums';
 
 const prisma = new PrismaClient();
 
@@ -89,10 +90,18 @@ async function main(): Promise<void> {
         favorited: false,
         fileUrls: [],
         logItems: {
-          create: {
-            status: 'APPLIED',
-            notes: 'Initial application sent',
-          },
+          create: [
+            {
+              status: ApplicationStatus.APPLIED,
+              date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+              notes: 'Initial application sent',
+            },
+            {
+              status: ApplicationStatus.INTERVIEW,
+              date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+              notes: 'First phone interview finished',
+            },
+          ],
         },
         reminders: {
           create: {
@@ -122,10 +131,18 @@ async function main(): Promise<void> {
         favorited: true,
         fileUrls: [],
         logItems: {
-          create: {
-            status: 'INTERVIEW',
-            notes: 'Interview scheduled',
-          },
+          create: [
+            {
+              status: ApplicationStatus.APPLIED,
+              date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+              notes: 'Initial application sent',
+            },
+            {
+              status: ApplicationStatus.INTERVIEW,
+              date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+              notes: 'First phone interview finished',
+            },
+          ],
         },
         reminders: {
           create: {
@@ -156,7 +173,8 @@ async function main(): Promise<void> {
         fileUrls: [],
         logItems: {
           create: {
-            status: 'DRAFT',
+            status: ApplicationStatus.DRAFT,
+            date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
             notes: 'Draft created',
           },
         },

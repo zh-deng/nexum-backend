@@ -25,6 +25,11 @@ export class ApplicationController {
     return this.applicationService.update(applicationId, user.id, dto);
   }
 
+  @Patch(':id/favorite')
+  async toggleFavorite(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.applicationService.toggleFavorite(id, user.id);
+  }
+
   @Get()
   findAll(@CurrentUser() user: AuthUser) {
     return this.applicationService.findAll(user.id);

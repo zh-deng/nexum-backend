@@ -16,4 +16,9 @@ export class UpdateLogItemDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  date?: string;
 }
