@@ -55,7 +55,7 @@ model Application {
   status         ApplicationStatus @default(DRAFT)
   userId         String
   user           User              @relation(fields: [userId], references: [id])
-  favorited      Boolean?           @default(false)
+  favorited      Boolean?          @default(false)
   fileUrls       String[]
   logItems       LogItem[]
   reminders      Reminder[]
@@ -110,6 +110,7 @@ model LogItem {
   id            String            @id @default(cuid())
   status        ApplicationStatus
   notes         String?
+  date          DateTime?         @default(now())
   applicationId String
   application   Application       @relation(fields: [applicationId], references: [id])
   createdAt     DateTime          @default(now())

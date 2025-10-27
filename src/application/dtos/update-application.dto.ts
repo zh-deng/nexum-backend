@@ -11,13 +11,27 @@ import { Priority, WorkLocation } from '../../types/enums';
 import { ApplicationStatus } from '@prisma/client';
 import { UpdateCompanyDto } from '../../company/dtos/update-company.dto';
 import { Type } from 'class-transformer';
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateApplicationDto {
+  @ApiProperty()
+  @IsString()
+  id: string;
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   jobTitle?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  userId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  companyId?: string;
 
   @ApiPropertyOptional({ type: () => UpdateCompanyDto })
   @IsOptional()

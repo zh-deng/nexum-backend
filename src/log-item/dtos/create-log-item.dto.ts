@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
 import { ApplicationStatus } from '../../types/enums';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -15,4 +15,9 @@ export class CreateLogItemDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsDate()
+  date?: Date;
 }
