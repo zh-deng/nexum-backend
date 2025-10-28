@@ -26,15 +26,21 @@ export class LogItemService {
   }
 
   async update(logItemId: string, userId: string, data: UpdateLogItemDto) {
-    const application = await this.prisma.application.findUnique({
+    const logItem = await this.prisma.logItem.findUnique({
       where: {
-        id: data.applicationId,
+        id: logItemId,
       },
-      select: { userId: true },
+      select: {
+        application: {
+          select: {
+            userId: true,
+          },
+        },
+      },
     });
 
-    if (!application || application.userId !== userId) {
-      throw new NotFoundException(`Application of log-item not found or access denied`);
+    if (!logItem || logItem.application.userId !== userId) {
+      throw new NotFoundException(`Log item not found or access denied`);
     }
 
     try {
@@ -50,6 +56,31 @@ export class LogItemService {
       }
       throw error;
     }
+  }
+
+  async delete(logItemId: string, userId: string) {
+    const logItem = await this.prisma.logItem.findUnique({
+      where: {
+        id: logItemId,
+      },
+      select: {
+        application: {
+          select: {
+            userId: true,
+          },
+        },
+      },
+    });
+
+    if (!logItem || logItem.application.userId !== userId) {
+      throw new NotFoundException(`Log item not found or access denied`);
+    }
+
+    return await this.prisma.logItem.delete({
+      where: {
+        id: logItemId,
+      },
+    });
   }
 
   async findAllByApplication(applicationId: string, userId: string) {

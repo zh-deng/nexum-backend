@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { LogItemService } from './log-item.service';
 import { CreateLogItemDto } from './dtos/create-log-item.dto';
 import { UpdateLogItemDto } from './dtos/update-log-item.dto';
@@ -23,6 +23,11 @@ export class LogItemController {
     @Body() dto: UpdateLogItemDto
   ) {
     return this.logItemService.update(logItemId, user.id, dto);
+  }
+
+  @Delete(':id')
+  delete(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.logItemService.delete(id, user.id);
   }
 
   @Get('application/:applicationId')
