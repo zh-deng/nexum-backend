@@ -8,7 +8,6 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Priority, WorkLocation } from '../../types/enums';
-import { ApplicationStatus } from '@prisma/client';
 import { UpdateCompanyDto } from '../../company/dtos/update-company.dto';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -68,11 +67,6 @@ export class UpdateApplicationDto {
   @IsOptional()
   @IsBoolean()
   favorited?: boolean;
-
-  @ApiPropertyOptional({ enum: ApplicationStatus })
-  @IsOptional()
-  @IsEnum(ApplicationStatus)
-  status?: ApplicationStatus;
 
   @ApiPropertyOptional()
   @IsOptional()

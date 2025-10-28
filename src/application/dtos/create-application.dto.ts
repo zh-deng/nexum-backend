@@ -58,6 +58,10 @@ export class CreateApplicationDto {
   status?: ApplicationStatus;
 
   @ApiProperty()
+  @IsString()
+  logItemDate: string;
+
+  @ApiProperty()
   @IsArray()
   @IsUrl({}, { each: true })
   fileUrls: string[];

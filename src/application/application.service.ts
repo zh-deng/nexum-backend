@@ -9,7 +9,7 @@ export class ApplicationService {
   constructor(private prisma: PrismaService) {}
 
   async create(userId: string, data: CreateApplicationDto) {
-    const { company, ...applicationdata } = data;
+    const { company, logItemDate, ...applicationdata } = data;
 
     // Upsert to avoid race conditions of multiple requests at the same time
     const companyRecord = await this.prisma.company.upsert({
@@ -34,6 +34,7 @@ export class ApplicationService {
         logItems: {
           create: {
             status: applicationdata.status || 'DRAFT',
+            date: new Date(logItemDate),
           },
         },
       },
