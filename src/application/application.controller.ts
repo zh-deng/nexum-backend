@@ -1,9 +1,10 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApplicationService } from './application.service';
 import { CreateApplicationDto } from './dtos/create-application.dto';
 import { type AuthUser, CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UpdateApplicationDto } from './dtos/update-application.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { SortType } from '../types/enums';
 
 @ApiTags('applications')
 @ApiBearerAuth()
@@ -36,7 +37,23 @@ export class ApplicationController {
   }
 
   @Get()
-  findAll(@CurrentUser() user: AuthUser) {
-    return this.applicationService.findAll(user.id);
+  findAll(
+    @CurrentUser() user: AuthUser,
+    @Query('q') searchQuery?: string,
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '20',
+    @Query('status') status?: string,
+    @Query('sortBy') sortBy?: string
+  ) {
+    const pageNum = parseInt(page, 10);
+    const limitNum = Math.min(parseInt(limit, 10), 100);
+
+    return this.applicationService.findAll(user.id, {
+      searchQuery,
+      status,
+      page: pageNum,
+      limit: limitNum,
+      sortBy: sortBy || SortType.DATE_NEW,
+    });
   }
 }

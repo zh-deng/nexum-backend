@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CreateApplicationDto } from './dtos/create-application.dto';
 import { UpdateApplicationDto } from './dtos/update-application.dto';
 import { Prisma } from '@prisma/client';
+import { ApplicationStatus, SortType } from '../types/enums';
 
 @Injectable()
 export class ApplicationService {
@@ -152,15 +153,98 @@ export class ApplicationService {
     });
   }
 
-  async findAll(userId: string) {
-    return await this.prisma.application.findMany({
-      where: { userId },
-      include: {
-        company: true,
-        reminders: true,
-        interviews: true,
-        logItems: true,
+  async findAll(
+    userId: string,
+    options: {
+      searchQuery?: string;
+      status?: string;
+      page: number;
+      limit: number;
+      sortBy?: string;
+    }
+  ) {
+    const { searchQuery, status, page, limit, sortBy } = options;
+    const skip = (page - 1) * limit;
+
+    // Build where clause
+    const where: Prisma.ApplicationWhereInput = { userId };
+
+    if (searchQuery && searchQuery.trim()) {
+      where.OR = [
+        { jobTitle: { contains: searchQuery, mode: 'insensitive' } },
+        {
+          company: {
+            is: {
+              name: { contains: searchQuery, mode: 'insensitive' },
+            },
+          },
+        },
+        {
+          company: {
+            is: {
+              city: { contains: searchQuery, mode: 'insensitive' },
+            },
+          },
+        },
+      ];
+    }
+
+    // Add status filter if provided
+    if (status !== 'ALL') {
+      where.status = status as ApplicationStatus;
+    }
+
+    // Build orderBy clause based on sortBy
+    const orderBy: Prisma.ApplicationOrderByWithRelationInput[] = [];
+
+    switch (sortBy) {
+      case SortType.ALPHABETICAL_TITLE:
+        orderBy.push({ jobTitle: 'asc' });
+        break;
+      case SortType.ALPHABETICAL_COMPANY:
+        orderBy.push({ company: { name: 'asc' } });
+        break;
+      case SortType.DATE_OLD:
+        orderBy.push({ updatedAt: 'desc' });
+        break;
+      case SortType.PRIORITY:
+        orderBy.push({ priority: 'asc' });
+        break;
+      case SortType.DATE_NEW:
+      default:
+        orderBy.push({ updatedAt: 'asc' });
+        break;
+    }
+
+    // Fetch data and count
+    const [applications, total] = await Promise.all([
+      this.prisma.application.findMany({
+        where,
+        include: {
+          company: true,
+          reminders: true,
+          interviews: true,
+          logItems: true,
+        },
+        orderBy,
+        skip,
+        take: limit,
+      }),
+      this.prisma.application.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: applications,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
       },
-    });
+    };
   }
 }
