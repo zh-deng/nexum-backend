@@ -36,12 +36,6 @@ enum WorkLocation {
   UNSURE
 }
 
-enum Priority {
-  LOW
-  MEDIUM
-  HIGH
-}
-
 model Application {
   id             String            @id @default(cuid())
   jobTitle       String
@@ -50,7 +44,7 @@ model Application {
   jobLink        String?
   jobDescription String?
   workLocation   WorkLocation      @default(UNSURE)
-  priority       Priority          @default(MEDIUM)
+  priority       Int               @default(2) // 1=HIGH, 2=MEDIUM, 3=LOW
   notes          String?
   status         ApplicationStatus @default(DRAFT)
   userId         String
@@ -62,6 +56,11 @@ model Application {
   interviews     Interview[]
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
+
+  @@index([userId])
+  @@index([userId, updatedAt])
+  @@index([userId, status])
+  @@index([userId, priority])
 }
 
 enum InterviewStatus {
