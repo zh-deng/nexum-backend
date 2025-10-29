@@ -13,6 +13,11 @@ export class LogItemService {
       where: { id: data.applicationId },
       select: {
         userId: true,
+        logItems: {
+          select: { date: true },
+          orderBy: { date: 'desc' },
+          take: 1,
+        },
       },
     });
 
@@ -20,9 +25,20 @@ export class LogItemService {
       throw new NotFoundException('Application of log-item not found or access denied');
     }
 
-    return await this.prisma.logItem.create({
-      data,
-    });
+    const mostRecentLogDate = new Date(application.logItems[0].date!);
+    const newDate = new Date(data.date ?? Date.now());
+
+    const logItem = await this.prisma.logItem.create({ data });
+
+    // update application status if new log item is most recent
+    if (newDate > mostRecentLogDate) {
+      await this.prisma.application.update({
+        where: { id: data.applicationId },
+        data: { status: data.status },
+      });
+    }
+
+    return logItem;
   }
 
   async update(logItemId: string, userId: string, data: UpdateLogItemDto) {
