@@ -19,5 +19,5 @@ export class CreateLogItemDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsDate()
-  date?: Date;
+  date: Date;
 }
