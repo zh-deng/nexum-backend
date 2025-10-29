@@ -2,12 +2,13 @@ import {
   IsArray,
   IsBoolean,
   IsEnum,
+  IsNumber,
   IsOptional,
   IsString,
   IsUrl,
   ValidateNested,
 } from 'class-validator';
-import { Priority, WorkLocation } from '../../types/enums';
+import { WorkLocation } from '../../types/enums';
 import { UpdateCompanyDto } from '../../company/dtos/update-company.dto';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -55,8 +56,8 @@ export class UpdateApplicationDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsEnum(Priority)
-  priority?: Priority;
+  @IsNumber()
+  priority?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
