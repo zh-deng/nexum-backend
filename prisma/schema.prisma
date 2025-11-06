@@ -109,7 +109,7 @@ model LogItem {
   id            String            @id @default(cuid())
   status        ApplicationStatus
   notes         String?
-  date          DateTime?         @default(now())
+  date          DateTime         @default(now())
   applicationId String
   application   Application       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   createdAt     DateTime          @default(now())
