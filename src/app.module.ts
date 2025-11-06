@@ -8,6 +8,7 @@ import { LogItemModule } from './log-item/log-item.module';
 import { InterviewModule } from './interview/interview.module';
 import { CompanyModule } from './company/company.module';
 import { ApplicationModule } from './application/application.module';
+import { ChartModule } from './chart/chart.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ApplicationModule } from './application/application.module';
     LogItemModule,
     InterviewModule,
     CompanyModule,
+    ChartModule,
   ],
   controllers: [AppController],
   providers: [AppService],
