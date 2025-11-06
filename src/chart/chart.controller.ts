@@ -12,17 +12,16 @@ export class ChartController {
 
   @Get('pie/:timeFrame')
   getPieChartData(@CurrentUser() user: AuthUser, @Param('timeFrame') timeFrame: TimeFrameType) {
-    return this.chartService.getPieChartData(user.id, timeFrame)
+    return this.chartService.getPieChartData(user.id, timeFrame);
   }
 
   @Get('bar/:timeFrame')
   getBarChartData(@CurrentUser() user: AuthUser, @Param('timeFrame') timeFrame: TimeFrameType) {
-    return this.chartService.getBarChartData(user.id, timeFrame)
+    return this.chartService.getBarChartData(user.id, timeFrame);
   }
 
-  @Get('sankey')
+  @Get('sankey/:timeFrame')
   getSankeyChartData(@CurrentUser() user: AuthUser, @Param('timeFrame') timeFrame: TimeFrameType) {
-    return this.chartService.getSankeyChartData(user.id, timeFrame)
+    return this.chartService.getSankeyChartData(user.id, timeFrame);
   }
-
 }
