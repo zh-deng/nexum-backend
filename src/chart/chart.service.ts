@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { ApplicationStatus, TimeFrameType } from '../types/enums';
+import { TimeFrameType } from '../types/enums';
 import { calculateTimeFrame, getTimeFrameMonths } from '../utils/chart.helpers';
+import { ApplicationStatus } from '@prisma/client';
 
 @Injectable()
 export class ChartService {
@@ -70,7 +71,7 @@ export class ChartService {
       });
 
       if (earliestLog) {
-        allTimeStartYear = earliestLog.date!.getFullYear();
+        allTimeStartYear = earliestLog.date.getFullYear();
       } else {
         // fallback: current year if no logs found
         allTimeStartYear = new Date().getFullYear();
@@ -139,5 +140,135 @@ export class ChartService {
     return barChartData;
   }
 
-  async getSankeyChartData(userId: string, timeFrame: TimeFrameType) {}
+  async getSankeyChartData(userId: string, timeFrame: TimeFrameType) {
+    // Calculate the start date for the given time frame
+    const { startDate } = calculateTimeFrame(timeFrame);
+
+    // Map internal application statuses to human-readable labels
+    const statusMap: Record<string, string> = {
+      APPLIED: 'Applied / No Answer',
+      OFFER: 'Offer',
+      HIRED: 'Hired',
+      DECLINED_OFFER: 'Declined',
+      REJECTED: 'Rejected',
+      GHOSTED: 'Ghosted',
+      WITHDRAWN: 'Withdrawn',
+    };
+
+    // Fetch all applications that have log items updated after the start date
+    const apps = await this.prisma.application.findMany({
+      where: {
+        userId,
+        logItems: {
+          some: { date: { gt: startDate.toISOString() } },
+        },
+      },
+      select: {
+        logItems: {
+          where: { date: { gt: startDate.toISOString() } },
+          select: { status: true, date: true },
+          orderBy: { date: 'asc' },
+        },
+      },
+    });
+
+    // Holds all link transitions (from→to) and their counts
+    const linkMap = new Map<string, number>();
+    // Tracks all nodes that appear in the graph
+    const usedNodes = new Set<string>();
+
+    // Process each application’s status history
+    for (const app of apps) {
+      // Sort log items chronologically
+      const sorted = [...app.logItems]
+        .filter((li) => li.date != null)
+        .sort(
+          (a, b) =>
+            new Date(a.date as Date | string).getTime() -
+            new Date(b.date as Date | string).getTime()
+        );
+
+      if (sorted.length === 0) continue;
+
+      const labels: string[] = [];
+      let interviewCount = 0;
+
+      // Convert statuses to readable labels, applying special rules
+      for (let i = 0; i < sorted.length; i++) {
+        const item = sorted[i];
+        const isLast = i === sorted.length - 1;
+
+        // Skip draft statuses entirely
+        if (item.status === ApplicationStatus.DRAFT) continue;
+
+        // Number interviews sequentially (1st, 2nd, etc.)
+        if (item.status === ApplicationStatus.INTERVIEW) {
+          interviewCount += 1;
+          labels.push(`${interviewCount}. Interview`);
+          continue;
+        }
+
+        // Only include "Applied" if it's the most recent status
+        if (item.status === ApplicationStatus.APPLIED) {
+          if (isLast) {
+            labels.push('Applied / No Answer');
+          }
+          continue; // skip all other APPLIED statuses
+        }
+
+        // Map remaining statuses to readable names
+        const mapped = statusMap[item.status] ?? item.status;
+        labels.push(mapped);
+      }
+
+      if (labels.length === 0) continue;
+
+      // Always connect "Applications" → first actual status
+      {
+        const first = labels[0];
+        const key = `Applications->${first}`;
+        linkMap.set(key, (linkMap.get(key) || 0) + 1);
+        usedNodes.add('Applications');
+        usedNodes.add(first);
+      }
+
+      // Build transitions between consecutive statuses
+      for (let i = 0; i < labels.length - 1; i++) {
+        const from = labels[i];
+        const to = labels[i + 1];
+        if (!from || !to || from === to) continue;
+        const key = `${from}->${to}`;
+        linkMap.set(key, (linkMap.get(key) || 0) + 1);
+        usedNodes.add(from);
+        usedNodes.add(to);
+      }
+    }
+
+    // Assign each node a category for coloring/styling in the Sankey chart
+    function getCategory(name: string): string {
+      if (name === 'Applications') return 'start';
+      if (name === 'Applied / No Answer') return 'finished'; // final APPLIED case
+      if (name.includes('Interview') || name === 'Ghosted' || name === 'Offer') {
+        return 'active';
+      }
+      return 'finished'; // default group
+    }
+
+    // Convert the node and link sets into Sankey-compatible arrays
+    const nodes = Array.from(usedNodes).map((name) => ({
+      name,
+      category: getCategory(name),
+    }));
+
+    const links = Array.from(linkMap.entries()).map(([key, value]) => {
+      const [source, target] = key.split('->');
+      return { source, target, value };
+    });
+
+    // Final Sankey data structure
+    const data = { nodes, links };
+
+    // Return structured Sankey data
+    return data;
+  }
 }
