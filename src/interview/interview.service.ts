@@ -78,7 +78,16 @@ export class InterviewService {
         },
       },
       include: {
-        application: true,
+        application: {
+          select: {
+            jobTitle: true,
+            company: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
       },
       orderBy: {
         date: 'asc',
