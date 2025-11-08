@@ -1,4 +1,5 @@
-import { ApplicationStatus, TimeFrameType } from '../types/enums';
+import { ApplicationStatus } from '@prisma/client';
+import { TimeFrameType } from '../types/enums';
 
 export function calculateTimeFrame(timeFrame: TimeFrameType) {
   const statuses = [
