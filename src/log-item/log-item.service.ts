@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateLogItemDto } from './dtos/create-log-item.dto';
 import { UpdateLogItemDto } from './dtos/update-log-item.dto';
-import { Prisma } from '@prisma/client';
+import { ApplicationStatus, InterviewStatus, Prisma } from '@prisma/client';
 
 @Injectable()
 export class LogItemService {
@@ -25,10 +25,37 @@ export class LogItemService {
       throw new NotFoundException('Application of log-item not found or access denied');
     }
 
-    const mostRecentLogDate = new Date(application.logItems[0].date!);
+    const mostRecentLogDate = new Date(application.logItems[0].date);
     const newDate = new Date(data.date ?? Date.now());
 
-    const logItem = await this.prisma.logItem.create({ data });
+    let interviewData = undefined;
+
+    if (data.status === ApplicationStatus.INTERVIEW) {
+      const interviewDate = new Date(data.date);
+
+      const isFuture = interviewDate.getTime() > Date.now();
+      const interviewStatus = isFuture ? InterviewStatus.UPCOMING : InterviewStatus.DONE;
+
+      interviewData = {
+        applicationId: data.applicationId,
+        date: interviewDate,
+        status: interviewStatus,
+        notes: data.notes,
+      };
+
+      await this.prisma.interview.create({ data: interviewData });
+    }
+
+    const logItem = await this.prisma.logItem.create({
+      data,
+      include: {
+        application: {
+          include: {
+            interviews: true,
+          },
+        },
+      },
+    });
 
     // update application status if new log item is most recent
     if (newDate > mostRecentLogDate) {
@@ -47,6 +74,9 @@ export class LogItemService {
         id: logItemId,
       },
       select: {
+        applicationId: true,
+        status: true,
+        date: true,
         application: {
           select: {
             userId: true,
@@ -60,11 +90,70 @@ export class LogItemService {
     }
 
     try {
-      return this.prisma.logItem.update({
-        where: {
-          id: logItemId,
-        },
-        data,
+      return await this.prisma.$transaction(async (tx) => {
+        const oldStatus = logItem.status;
+        const newStatus = data.status ?? oldStatus;
+
+        // Case 1: log item switched TO INTERVIEW
+        if (newStatus === ApplicationStatus.INTERVIEW) {
+          const oldDate = logItem.date;
+
+          const existingInterview = await tx.interview.findFirst({
+            where: {
+              applicationId: logItem.applicationId,
+              date: oldDate,
+            },
+          });
+
+          const interviewDate = data.date ? new Date(data.date) : oldDate;
+          const isFuture = interviewDate.getTime() > Date.now();
+          const interviewStatus = isFuture ? InterviewStatus.UPCOMING : InterviewStatus.DONE;
+
+          if (existingInterview) {
+            await tx.interview.update({
+              where: { id: existingInterview.id },
+              data: {
+                date: interviewDate,
+                status: interviewStatus,
+                notes: data.notes ?? existingInterview.notes,
+              },
+            });
+          } else {
+            await tx.interview.create({
+              data: {
+                applicationId: logItem.applicationId,
+                date: interviewDate,
+                status: interviewStatus,
+                notes: data.notes ?? undefined,
+              },
+            });
+          }
+        }
+
+        // 🔹 Case 2: log item switched AWAY from INTERVIEW → delete interview
+        if (
+          oldStatus === ApplicationStatus.INTERVIEW &&
+          newStatus !== ApplicationStatus.INTERVIEW
+        ) {
+          const oldInterview = await tx.interview.findFirst({
+            where: {
+              applicationId: logItem.applicationId,
+              date: logItem.date,
+            },
+          });
+
+          if (oldInterview) {
+            await tx.interview.delete({
+              where: { id: oldInterview.id },
+            });
+          }
+        }
+
+        // Always update the log item itself
+        return await tx.logItem.update({
+          where: { id: logItemId },
+          data,
+        });
       });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
@@ -80,6 +169,9 @@ export class LogItemService {
         id: logItemId,
       },
       select: {
+        applicationId: true,
+        status: true,
+        date: true,
         application: {
           select: {
             userId: true,
@@ -92,11 +184,49 @@ export class LogItemService {
       throw new NotFoundException(`Log item not found or access denied`);
     }
 
-    return await this.prisma.logItem.delete({
-      where: {
-        id: logItemId,
-      },
-    });
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const logItemCount = await tx.logItem.count({
+          where: {
+            applicationId: logItem.applicationId,
+          },
+        });
+
+        if (logItemCount === 1) {
+          await tx.logItem.create({
+            data: {
+              applicationId: logItem.applicationId,
+              status: ApplicationStatus.DRAFT,
+              date: new Date(Date.now()),
+            },
+          });
+        }
+
+        if (logItem.status === ApplicationStatus.INTERVIEW) {
+          const oldInterview = await tx.interview.findFirst({
+            where: {
+              applicationId: logItem.applicationId,
+              date: logItem.date,
+            },
+            select: { id: true },
+          });
+
+          if (oldInterview) {
+            await tx.interview.delete({ where: { id: oldInterview.id } });
+          }
+        }
+
+        return await tx.logItem.delete({
+          where: { id: logItemId },
+          include: { application: true },
+        });
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+        throw new NotFoundException(`Log item with id ${logItemId} not found`);
+      }
+      throw error;
+    }
   }
 
   async findAllByApplication(applicationId: string, userId: string) {
