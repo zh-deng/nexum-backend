@@ -4,6 +4,7 @@ import { validateEnv } from './config/config.loader';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
+import { ValidationPipe } from '@nestjs/common';
 
 const env = validateEnv();
 
@@ -29,6 +30,14 @@ async function bootstrap() {
 
   const reflector = app.get(Reflector);
   app.useGlobalGuards(new JwtAuthGuard(reflector));
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true, // strips unexpected fields
+      forbidNonWhitelisted: true, // throws error if unknown fields provided
+      transform: true, // auto-converts DTO fields (string → Date, etc.)
+    }),
+  );
 
   const port = env.PORT || 3000;
   await app.listen(port);

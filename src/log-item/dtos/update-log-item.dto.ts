@@ -1,6 +1,7 @@
 import { IsEnum, IsOptional, IsString } from 'class-validator';
-import { ApplicationStatus } from '../../types/enums';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApplicationStatus } from '@prisma/client';
+import { Type } from 'class-transformer';
 
 export class UpdateLogItemDto {
   @ApiPropertyOptional({ enum: ApplicationStatus })
@@ -16,5 +17,6 @@ export class UpdateLogItemDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
+  @Type(() => Date)
   date?: string;
 }
