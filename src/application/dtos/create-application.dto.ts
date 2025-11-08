@@ -8,10 +8,10 @@ import {
   IsUrl,
   ValidateNested,
 } from 'class-validator';
-import { ApplicationStatus, WorkLocation } from '../../types/enums';
 import { CreateCompanyDto } from '../../company/dtos/create-company.dto';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApplicationStatus, WorkLocation } from '@prisma/client';
 
 export class CreateApplicationDto {
   @ApiProperty()

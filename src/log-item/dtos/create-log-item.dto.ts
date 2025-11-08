@@ -1,6 +1,7 @@
 import { IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
-import { ApplicationStatus } from '../../types/enums';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApplicationStatus } from '@prisma/client';
+import { Type } from 'class-transformer';
 
 export class CreateLogItemDto {
   @ApiProperty()
@@ -19,5 +20,6 @@ export class CreateLogItemDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsDate()
+  @Type(() => Date)
   date: Date;
 }
