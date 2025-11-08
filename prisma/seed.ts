@@ -1,6 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import { ApplicationStatus, PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { ApplicationStatus } from '../src/types/enums';
 
 const prisma = new PrismaClient();
 
@@ -109,12 +108,6 @@ async function main(): Promise<void> {
             message: 'Follow up with recruiter',
           },
         },
-        interviews: {
-          create: {
-            date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-            notes: 'Zoom interview scheduled',
-          },
-        },
       },
     }),
     prisma.application.create({
@@ -150,12 +143,6 @@ async function main(): Promise<void> {
             message: 'Prepare for interview',
           },
         },
-        interviews: {
-          create: {
-            date: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
-            notes: 'On-site interview',
-          },
-        },
       },
     }),
     prisma.application.create({
@@ -182,12 +169,6 @@ async function main(): Promise<void> {
           create: {
             alarmDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
             message: 'Decide whether to apply',
-          },
-        },
-        interviews: {
-          create: {
-            date: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
-            notes: 'No interview scheduled yet',
           },
         },
       },
