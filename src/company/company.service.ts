@@ -57,9 +57,6 @@ export class CompanyService {
       where: {
         userId,
       },
-      include: {
-        applications: true,
-      },
       orderBy: {
         name: 'asc',
       },
