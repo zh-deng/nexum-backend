@@ -2,9 +2,13 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateApplicationDto } from './dtos/create-application.dto';
 import { UpdateApplicationDto } from './dtos/update-application.dto';
-import { Prisma } from '@prisma/client';
-import { ApplicationStatus, SortType } from '../types/enums';
-import { getComplexSortDirection, requiresComplexDateSort, sortApplicationsByDateComplex } from '../utils/application-sorter.helpers';
+import { ApplicationStatus, InterviewStatus, Prisma } from '@prisma/client';
+import { SortType } from '../types/enums';
+import {
+  getComplexSortDirection,
+  requiresComplexDateSort,
+  sortApplicationsByDateComplex,
+} from '../utils/application-sorter.helpers';
 
 @Injectable()
 export class ApplicationService {
@@ -21,12 +25,30 @@ export class ApplicationService {
           userId,
         },
       },
-      update: {},
+      update: {
+        ...company,
+      },
       create: {
         ...company,
         userId,
       },
     });
+
+    let interviewData = undefined;
+
+    if (applicationdata.status === ApplicationStatus.INTERVIEW) {
+      const interviewDate = new Date(logItemDate);
+
+      const isFuture = interviewDate.getTime() > Date.now();
+      const interviewStatus = isFuture ? InterviewStatus.UPCOMING : InterviewStatus.DONE;
+
+      interviewData = {
+        create: {
+          date: interviewDate,
+          status: interviewStatus,
+        },
+      };
+    }
 
     return await this.prisma.application.create({
       data: {
@@ -39,10 +61,12 @@ export class ApplicationService {
             date: new Date(logItemDate),
           },
         },
+        ...(interviewData ? { interviews: interviewData } : {}),
       },
       include: {
         company: true,
         logItems: true,
+        interviews: true,
       },
     });
   }
@@ -154,138 +178,135 @@ export class ApplicationService {
     });
   }
 
-async findAll(
-  userId: string,
-  options: {
-    searchQuery?: string;
-    status?: string;
-    page: number;
-    limit: number;
-    sortBy?: string;
-  }
-) {
-  const { searchQuery, status, page, limit, sortBy = SortType.DATE_NEW } = options;
-  const skip = (page - 1) * limit;
-
-  // Build where clause
-  const where: Prisma.ApplicationWhereInput = { userId };
-
-  if (searchQuery && searchQuery.trim()) {
-    where.OR = [
-      { jobTitle: { contains: searchQuery, mode: 'insensitive' } },
-      {
-        company: {
-          is: {
-            name: { contains: searchQuery, mode: 'insensitive' },
-          },
-        },
-      },
-      {
-        company: {
-          is: {
-            city: { contains: searchQuery, mode: 'insensitive' },
-          },
-        },
-      },
-    ];
-  }
-
-  // Add status filter if provided
-  if (status !== 'ALL') {
-    where.status = status as ApplicationStatus;
-  }
-
-  // Determine if we need complex sorting
-  const needsComplexSort = requiresComplexDateSort(sortBy);
-
-  // Build orderBy clause based on sortBy
-  const orderBy: Prisma.ApplicationOrderByWithRelationInput[] = [];
-
-  if (needsComplexSort) {
-    // For complex date sorting, we'll fetch all matching records and sort in memory
-    // Use a basic order to ensure consistent results
-    orderBy.push({ id: 'asc' });
-  } else {
-    // Standard Prisma-level sorting
-    switch (sortBy as SortType) {
-      case SortType.ALPHABETICAL_TITLE:
-        orderBy.push({ jobTitle: 'asc' });
-        break;
-      case SortType.ALPHABETICAL_COMPANY:
-        orderBy.push({ company: { name: 'asc' } });
-        break;
-      case SortType.PRIORITY:
-        orderBy.push({ priority: 'asc' });
-        break;
-      default:
-        orderBy.push({ updatedAt: 'desc' });
-        break;
+  async findAll(
+    userId: string,
+    options: {
+      searchQuery?: string;
+      status?: string;
+      page: number;
+      limit: number;
+      sortBy?: string;
     }
-  }
+  ) {
+    const { searchQuery, status, page, limit, sortBy = SortType.DATE_NEW } = options;
+    const skip = (page - 1) * limit;
 
-  // For complex sorting, we need to fetch all records, sort them, then paginate
-  // For simple sorting, we can paginate at the database level
-  let applications;
-  let total;
+    // Build where clause
+    const where: Prisma.ApplicationWhereInput = { userId };
 
-  if (needsComplexSort) {
-    // Fetch all matching applications (without pagination)
-    const [allApplications, totalCount] = await Promise.all([
-      this.prisma.application.findMany({
-        where,
-        include: {
-          company: true,
-          reminders: true,
-          interviews: true,
-          logItems: true,
+    if (searchQuery && searchQuery.trim()) {
+      where.OR = [
+        { jobTitle: { contains: searchQuery, mode: 'insensitive' } },
+        {
+          company: {
+            is: {
+              name: { contains: searchQuery, mode: 'insensitive' },
+            },
+          },
         },
-        orderBy,
-      }),
-      this.prisma.application.count({ where }),
-    ]);
-
-    total = totalCount;
-
-    // Apply complex sorting
-    const sortDirection = getComplexSortDirection(sortBy);
-    const sortedApplications = sortApplicationsByDateComplex(
-      allApplications,
-      sortDirection
-    );
-
-    // Apply pagination in memory
-    applications = sortedApplications.slice(skip, skip + limit);
-  } else {
-    // Standard Prisma pagination
-    [applications, total] = await Promise.all([
-      this.prisma.application.findMany({
-        where,
-        include: {
-          company: true,
-          reminders: true,
-          interviews: true,
-          logItems: true,
+        {
+          company: {
+            is: {
+              city: { contains: searchQuery, mode: 'insensitive' },
+            },
+          },
         },
-        orderBy,
-        skip,
-        take: limit,
-      }),
-      this.prisma.application.count({ where }),
-    ]);
+      ];
+    }
+
+    // Add status filter if provided
+    if (status !== 'ALL') {
+      where.status = status as ApplicationStatus;
+    }
+
+    // Determine if we need complex sorting
+    const needsComplexSort = requiresComplexDateSort(sortBy);
+
+    // Build orderBy clause based on sortBy
+    const orderBy: Prisma.ApplicationOrderByWithRelationInput[] = [];
+
+    if (needsComplexSort) {
+      // For complex date sorting, we'll fetch all matching records and sort in memory
+      // Use a basic order to ensure consistent results
+      orderBy.push({ id: 'asc' });
+    } else {
+      // Standard Prisma-level sorting
+      switch (sortBy as SortType) {
+        case SortType.ALPHABETICAL_TITLE:
+          orderBy.push({ jobTitle: 'asc' });
+          break;
+        case SortType.ALPHABETICAL_COMPANY:
+          orderBy.push({ company: { name: 'asc' } });
+          break;
+        case SortType.PRIORITY:
+          orderBy.push({ priority: 'asc' });
+          break;
+        default:
+          orderBy.push({ updatedAt: 'desc' });
+          break;
+      }
+    }
+
+    // For complex sorting, we need to fetch all records, sort them, then paginate
+    // For simple sorting, we can paginate at the database level
+    let applications;
+    let total;
+
+    if (needsComplexSort) {
+      // Fetch all matching applications (without pagination)
+      const [allApplications, totalCount] = await Promise.all([
+        this.prisma.application.findMany({
+          where,
+          include: {
+            company: true,
+            reminders: true,
+            interviews: true,
+            logItems: true,
+          },
+          orderBy,
+        }),
+        this.prisma.application.count({ where }),
+      ]);
+
+      total = totalCount;
+
+      // Apply complex sorting
+      const sortDirection = getComplexSortDirection(sortBy);
+      const sortedApplications = sortApplicationsByDateComplex(allApplications, sortDirection);
+
+      // Apply pagination in memory
+      applications = sortedApplications.slice(skip, skip + limit);
+    } else {
+      // Standard Prisma pagination
+      [applications, total] = await Promise.all([
+        this.prisma.application.findMany({
+          where,
+          include: {
+            company: true,
+            reminders: true,
+            interviews: true,
+            logItems: true,
+          },
+          orderBy,
+          skip,
+          take: limit,
+        }),
+        this.prisma.application.count({ where }),
+      ]);
+    }
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: applications,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
+    };
   }
-
-  const totalPages = Math.ceil(total / limit);
-
-  return {
-    data: applications,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages,
-      hasNext: page < totalPages,
-      hasPrev: page > 1,
-    },
-  };
-}
 }
