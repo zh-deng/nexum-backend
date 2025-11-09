@@ -1,4 +1,4 @@
-import { ApplicationStatus, PrismaClient } from '@prisma/client';
+import { ApplicationStatus, InterviewStatus, PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -108,6 +108,13 @@ async function main(): Promise<void> {
             message: 'Follow up with recruiter',
           },
         },
+        interviews: {
+          create: {
+            date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+            notes: 'First phone interview finished',
+            status: InterviewStatus.DONE,
+          },
+        },
       },
     }),
     prisma.application.create({
@@ -141,6 +148,13 @@ async function main(): Promise<void> {
           create: {
             alarmDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
             message: 'Prepare for interview',
+          },
+        },
+        interviews: {
+          create: {
+            date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+            notes: 'First phone interview finished',
+            status: InterviewStatus.DONE,
           },
         },
       },
