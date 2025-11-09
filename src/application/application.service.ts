@@ -261,7 +261,11 @@ export class ApplicationService {
             company: true,
             reminders: true,
             interviews: true,
-            logItems: true,
+            logItems: {
+              orderBy: {
+                date: 'desc',
+              },
+            },
           },
           orderBy,
         }),
@@ -285,7 +289,11 @@ export class ApplicationService {
             company: true,
             reminders: true,
             interviews: true,
-            logItems: true,
+            logItems: {
+              orderBy: {
+                date: 'desc',
+              },
+            },
           },
           orderBy,
           skip,
