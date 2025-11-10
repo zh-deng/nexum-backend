@@ -14,10 +14,19 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 5s
       timeout: 5s
       retries: 5
+
+  redis:
+    image: redis:7
+    container_name: nexum-redis
+    restart: always
+    ports:
+      - '6379:6379'
+    volumes:
+      - redisdata:/data
 
   backend:
     build: .
@@ -33,6 +42,9 @@ services:
       PORT: 3000
       DATABASE_URL: postgres://postgres:password@postgres:5432/nexumdb
       JWT_SECRET: ffe48445dc7be67ba4d1f1dfb4f144e49a8d0417e3bf3746668e0a67c13176e1
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
 
 volumes:
   pgdata:
+  redisdata:
