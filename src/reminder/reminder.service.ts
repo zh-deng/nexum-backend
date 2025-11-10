@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CreateReminderDto } from './dtos/create-reminder.dto';
 import { UpdateReminderDto } from './dtos/update-reminder.dto';
 import { Prisma } from '@prisma/client';
+import { ReminderSortType, ReminderStatusFilter } from '../types/enums';
 
 @Injectable()
 export class ReminderService {
@@ -25,15 +26,21 @@ export class ReminderService {
   }
 
   async update(reminderId: string, userId: string, data: UpdateReminderDto) {
-    const application = await this.prisma.application.findUnique({
+    const reminder = await this.prisma.reminder.findUnique({
       where: {
-        id: data.applicationId,
+        id: reminderId
       },
-      select: { userId: true },
-    });
+      select: {
+        application: {
+          select: {
+            userId: true
+          }
+        }
+      }
+    })
 
-    if (!application || application.userId !== userId) {
-      throw new NotFoundException(`Application of reminder not found or access denied`);
+    if (!reminder || reminder.application.userId !== userId) {
+      throw new NotFoundException(`Reminder not found or access denied`);
     }
 
     try {
@@ -54,6 +61,31 @@ export class ReminderService {
     }
   }
 
+  async delete(reminderId: string, userId: string) {
+    const reminder = await this.prisma.reminder.findUnique({
+      where: {
+        id: reminderId,
+      },
+      select: {
+        application: {
+          select: {
+            userId: true,
+          },
+        },
+      },
+    });
+
+    if (!reminder || reminder.application.userId !== userId) {
+      throw new NotFoundException(`Reminder not found or access denied`);
+    }
+
+    return await this.prisma.reminder.delete({
+      where: {
+        id: reminderId,
+      },
+    });
+  }
+
   async findAllByApplication(applicationId: string, userId: string) {
     const application = await this.prisma.application.findUnique({
       where: {
@@ -71,18 +103,37 @@ export class ReminderService {
     });
   }
 
-  async findAll(userId: string) {
+  async findAll(userId: string, sortBy: ReminderSortType, statusFilter: ReminderStatusFilter) {
+    const orderDirection = sortBy === ReminderSortType.NEWEST ? 'desc' : 'asc';
+
     return await this.prisma.reminder.findMany({
       where: {
         application: {
           userId,
         },
+        ...(statusFilter !== ReminderStatusFilter.ALL && {
+          status:
+            statusFilter === ReminderStatusFilter.ACTIVE
+              ? ReminderStatusFilter.ACTIVE
+              : statusFilter === ReminderStatusFilter.STOPPED
+                ? ReminderStatusFilter.STOPPED
+                : ReminderStatusFilter.DONE,
+        }),
       },
       include: {
-        application: true,
+        application: {
+          select: {
+            jobTitle: true,
+            company: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
       },
       orderBy: {
-        alarmDate: 'asc',
+        alarmDate: orderDirection,
       },
     });
   }

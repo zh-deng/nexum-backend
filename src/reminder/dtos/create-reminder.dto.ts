@@ -1,7 +1,6 @@
-import { IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsDate, IsOptional, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ReminderStatus } from '@prisma/client';
 
 export class CreateReminderDto {
   @ApiProperty()
@@ -9,7 +8,6 @@ export class CreateReminderDto {
   applicationId: string;
 
   @ApiProperty()
-  @Type(() => Date)
   @IsDate()
   @Type(() => Date)
   alarmDate: Date;
@@ -18,9 +16,4 @@ export class CreateReminderDto {
   @IsOptional()
   @IsString()
   message?: string;
-
-  @ApiPropertyOptional({ enum: ReminderStatus })
-  @IsOptional()
-  @IsEnum(ReminderStatus)
-  status?: ReminderStatus;
 }
