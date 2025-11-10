@@ -1,9 +1,10 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ReminderService } from './reminder.service';
 import { CreateReminderDto } from './dtos/create-reminder.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UpdateReminderDto } from './dtos/update-reminder.dto';
 import { type AuthUser, CurrentUser } from '../auth/decorators/current-user.decorator';
+import { ReminderSortType, ReminderStatusFilter } from '../types/enums';
 
 @ApiTags('reminders')
 @ApiBearerAuth()
@@ -33,8 +34,17 @@ export class ReminderController {
     return this.reminderService.findAllByApplication(applicationId, user.id);
   }
 
+  @Delete(':id')
+  delete(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.reminderService.delete(id, user.id);
+  }
+
   @Get()
-  findAll(@CurrentUser() user: AuthUser) {
-    return this.reminderService.findAll(user.id);
+  findAll(
+    @CurrentUser() user: AuthUser,
+    @Query('sortBy') sortBy: ReminderSortType = ReminderSortType.NEWEST,
+    @Query('statusFilter') statusFilter: ReminderStatusFilter = ReminderStatusFilter.ALL
+  ) {
+    return this.reminderService.findAll(user.id, sortBy, statusFilter);
   }
 }
