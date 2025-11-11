@@ -2,12 +2,16 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateReminderDto } from './dtos/create-reminder.dto';
 import { UpdateReminderDto } from './dtos/update-reminder.dto';
-import { Prisma } from '@prisma/client';
+import { Prisma, ReminderStatus } from '@prisma/client';
 import { ReminderSortType, ReminderStatusFilter } from '../types/enums';
+import { EmailProducerService } from '../queues/email-producer.service';
 
 @Injectable()
 export class ReminderService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly emailProducer: EmailProducerService
+  ) {}
 
   async create(userId: string, data: CreateReminderDto) {
     const application = await this.prisma.application.findUnique({
@@ -20,24 +24,33 @@ export class ReminderService {
     if (!application || application.userId !== userId) {
       throw new NotFoundException('Application of reminder not found or access denied');
     }
-    return await this.prisma.reminder.create({
-      data,
+
+    return await this.prisma.$transaction(async (tx) => {
+      // First create the reminder
+      const reminder = await tx.reminder.create({
+        data,
+      });
+
+      // Then add the BullMQ job
+      await this.emailProducer.addReminderEmailJob(reminder);
+
+      return reminder;
     });
   }
 
   async update(reminderId: string, userId: string, data: UpdateReminderDto) {
     const reminder = await this.prisma.reminder.findUnique({
       where: {
-        id: reminderId
+        id: reminderId,
       },
       select: {
         application: {
           select: {
-            userId: true
-          }
-        }
-      }
-    })
+            userId: true,
+          },
+        },
+      },
+    });
 
     if (!reminder || reminder.application.userId !== userId) {
       throw new NotFoundException(`Reminder not found or access denied`);
