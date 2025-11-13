@@ -25,17 +25,15 @@ export class ReminderService {
       throw new NotFoundException('Application of reminder not found or access denied');
     }
 
-    return await this.prisma.$transaction(async (tx) => {
-      // First create the reminder
-      const reminder = await tx.reminder.create({
-        data,
-      });
-
-      // Then add the BullMQ job
-      await this.emailProducer.addReminderEmailJob(reminder);
-
-      return reminder;
+    // First create the reminder
+    const reminder = await this.prisma.reminder.create({
+      data,
     });
+
+    // Then add the BullMQ job
+    await this.emailProducer.addReminderEmailJob(reminder.id);
+
+    return reminder;
   }
 
   async update(reminderId: string, userId: string, data: UpdateReminderDto) {
@@ -44,6 +42,7 @@ export class ReminderService {
         id: reminderId,
       },
       select: {
+        status: true,
         application: {
           select: {
             userId: true,
@@ -57,7 +56,7 @@ export class ReminderService {
     }
 
     try {
-      return await this.prisma.reminder.update({
+      const updatedReminder = await this.prisma.reminder.update({
         where: {
           id: reminderId,
         },
@@ -66,6 +65,25 @@ export class ReminderService {
           application: true,
         },
       });
+
+      const oldStatus = reminder.status;
+      const newStatus = updatedReminder.status;
+      const isActive = (status: ReminderStatus) => status === ReminderStatus.ACTIVE;
+
+      if (isActive(oldStatus) && isActive(newStatus)) {
+        await this.emailProducer.removeReminderEmailJob(updatedReminder.jobId!);
+        await this.emailProducer.addReminderEmailJob(updatedReminder.id);
+      }
+
+      if (isActive(oldStatus) && !isActive(newStatus)) {
+        await this.emailProducer.removeReminderEmailJob(updatedReminder.jobId!);
+      }
+
+      if (!isActive(oldStatus) && isActive(newStatus)) {
+        await this.emailProducer.addReminderEmailJob(updatedReminder.id);
+      }
+
+      return updatedReminder;
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
         throw new NotFoundException(`Reminder with id ${reminderId} not found`);
@@ -80,6 +98,7 @@ export class ReminderService {
         id: reminderId,
       },
       select: {
+        jobId: true,
         application: {
           select: {
             userId: true,
@@ -92,11 +111,15 @@ export class ReminderService {
       throw new NotFoundException(`Reminder not found or access denied`);
     }
 
-    return await this.prisma.reminder.delete({
+    const deletedReminder = await this.prisma.reminder.delete({
       where: {
         id: reminderId,
       },
     });
+
+    await this.emailProducer.removeReminderEmailJob(reminder.jobId!);
+
+    return deletedReminder;
   }
 
   async findAllByApplication(applicationId: string, userId: string) {
