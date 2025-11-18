@@ -3,10 +3,14 @@ import { Job } from 'bullmq';
 import { Prisma, Reminder, ReminderStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotFoundException } from '@nestjs/common';
+import { MailService } from '../mail/mail.service';
 
 @Processor('email')
 export class EmailProcessor extends WorkerHost {
-  constructor(private prisma: PrismaService) {
+  constructor(
+    private prisma: PrismaService,
+    private readonly mailService: MailService
+  ) {
     super();
   }
 
@@ -15,6 +19,22 @@ export class EmailProcessor extends WorkerHost {
       where: {
         id: job.data.id,
       },
+      include: {
+        application: {
+          select: {
+            company: {
+              select: {
+                name: true,
+              },
+            },
+            user: {
+              select: {
+                email: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!reminder) {
@@ -22,7 +42,7 @@ export class EmailProcessor extends WorkerHost {
     }
 
     try {
-      const updatedReminder = await this.prisma.reminder.update({
+      await this.prisma.reminder.update({
         where: {
           id: reminder.id,
         },
@@ -34,10 +54,11 @@ export class EmailProcessor extends WorkerHost {
         },
       });
 
-      console.log('Old job:', job.data);
-      console.log('New job:', updatedReminder);
-
-      // return updatedReminder;
+      await this.mailService.sendMail({
+        to: reminder.application.user.email,
+        subject: `Interview Reminder for ${reminder.application.company.name}`,
+        text: reminder.message ?? 'No message',
+      });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
         throw new NotFoundException(`Reminder with id ${reminder.id} not found`);

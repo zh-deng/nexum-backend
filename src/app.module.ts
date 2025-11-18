@@ -11,6 +11,7 @@ import { ApplicationModule } from './application/application.module';
 import { ChartModule } from './chart/chart.module';
 import { QueuesModule } from './queues/queues.module';
 import { PrismaModule } from '../prisma/prisma.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -25,7 +26,8 @@ import { PrismaModule } from '../prisma/prisma.module';
     CompanyModule,
     ChartModule,
     QueuesModule,
-    PrismaModule
+    PrismaModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

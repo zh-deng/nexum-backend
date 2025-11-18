@@ -69,14 +69,15 @@ export class ReminderService {
       const oldStatus = reminder.status;
       const newStatus = updatedReminder.status;
       const isActive = (status: ReminderStatus) => status === ReminderStatus.ACTIVE;
+      const jobId: string = (updatedReminder.jobId ?? '') as string;
 
-      if (isActive(oldStatus) && isActive(newStatus)) {
-        await this.emailProducer.removeReminderEmailJob(updatedReminder.jobId!);
+      if (isActive(oldStatus) && isActive(newStatus) && jobId) {
+        await this.emailProducer.removeReminderEmailJob(jobId);
         await this.emailProducer.addReminderEmailJob(updatedReminder.id);
       }
 
-      if (isActive(oldStatus) && !isActive(newStatus)) {
-        await this.emailProducer.removeReminderEmailJob(updatedReminder.jobId!);
+      if (isActive(oldStatus) && !isActive(newStatus) && jobId) {
+        await this.emailProducer.removeReminderEmailJob(jobId);
       }
 
       if (!isActive(oldStatus) && isActive(newStatus)) {
@@ -93,7 +94,7 @@ export class ReminderService {
   }
 
   async delete(reminderId: string, userId: string) {
-    const reminder = await this.prisma.reminder.findUnique({
+    const reminder = (await this.prisma.reminder.findUnique({
       where: {
         id: reminderId,
       },
@@ -105,7 +106,16 @@ export class ReminderService {
           },
         },
       },
-    });
+    })) as Prisma.ReminderGetPayload<{
+      select: {
+        jobId: true;
+        application: {
+          select: {
+            userId: true;
+          };
+        };
+      };
+    }> | null;
 
     if (!reminder || reminder.application.userId !== userId) {
       throw new NotFoundException(`Reminder not found or access denied`);
@@ -117,7 +127,7 @@ export class ReminderService {
       },
     });
 
-    await this.emailProducer.removeReminderEmailJob(reminder.jobId!);
+    await this.emailProducer.removeReminderEmailJob(reminder.jobId as string);
 
     return deletedReminder;
   }
