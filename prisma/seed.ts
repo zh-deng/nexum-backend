@@ -95,7 +95,7 @@ async function main(): Promise<void> {
           create: [
             {
               status: ApplicationStatus.APPLIED,
-              date: new Date(now - 10 * day),
+              date: new Date(now - 160 * day),
               notes: 'Initial application sent.',
             },
           ],
@@ -124,6 +124,10 @@ async function main(): Promise<void> {
               date: new Date(now - 8 * day),
               notes: 'Sent tailored CV and cover letter.',
             },
+            {
+              status: ApplicationStatus.REJECTED,
+              date: new Date(now - 2 * day),
+            }
           ],
         },
       },
@@ -198,7 +202,7 @@ async function main(): Promise<void> {
           create: [
             {
               status: ApplicationStatus.APPLIED,
-              date: new Date(now - 6 * day),
+              date: new Date(now - 190 * day),
               notes: 'Application sent via company careers page.',
             },
           ],
@@ -227,6 +231,10 @@ async function main(): Promise<void> {
               date: new Date(now - 4 * day),
               notes: 'Applied with a portfolio of previous data projects.',
             },
+            {
+              status: ApplicationStatus.REJECTED,
+              date: new Date(now - 1 * day),
+            },
           ],
         },
       },
@@ -236,7 +244,7 @@ async function main(): Promise<void> {
     prisma.application.create({
       data: {
         jobTitle: 'Senior Backend Engineer',
-        companyId: company3.id,
+        companyId: company2.id,
         userId: user.id,
         jobLink: 'www.testsite6.com',
         jobDescription: 'Designing scalable APIs and leading backend initiatives.',
@@ -332,7 +340,7 @@ async function main(): Promise<void> {
           create: [
             {
               status: ApplicationStatus.APPLIED,
-              date: new Date(now - 7 * day),
+              date: new Date(now - 65 * day),
               notes: 'Application submitted with example test cases.',
             },
           ],
@@ -344,7 +352,7 @@ async function main(): Promise<void> {
     prisma.application.create({
       data: {
         jobTitle: 'Site Reliability Engineer',
-        companyId: company3.id,
+        companyId: company2.id,
         userId: user.id,
         jobLink: 'www.testsite9.com',
         jobDescription: 'Ensuring reliability and observability of services.',
@@ -521,6 +529,10 @@ async function main(): Promise<void> {
               date: new Date(now - 9 * day),
               notes: 'Application submitted with platform case study.',
             },
+            {
+              status: ApplicationStatus.REJECTED,
+              date: new Date(now - 3 * day),
+            },
           ],
         },
       },
@@ -556,7 +568,7 @@ async function main(): Promise<void> {
     prisma.application.create({
       data: {
         jobTitle: 'Cloud Architect',
-        companyId: company3.id,
+        companyId: company1.id,
         userId: user.id,
         jobLink: 'www.testsite15.com',
         jobDescription: 'Cloud architecture and cost optimization.',
