@@ -11,24 +11,28 @@ export class ChartService {
   async getPieChartData(userId: string, timeFrame: TimeFrameType) {
     const { statuses, startDate } = calculateTimeFrame(timeFrame);
 
-    const counts = await this.prisma.$transaction(
-      statuses.map((status) =>
-        this.prisma.application.count({
-          where: {
-            userId,
-            status,
-            logItems: {
-              some: {
-                status,
-                date: {
-                  gt: startDate.toISOString(),
-                },
-              },
-            },
-          },
-        })
-      )
-    );
+    // Query the DB for the latest LogItem per application
+    // and count applications whose latest log date is >= startDate.
+    const results = await this.prisma.$queryRaw<{ status: ApplicationStatus; count: bigint }[]>`
+    SELECT
+      li."status" as status,
+      COUNT(*) AS count
+    FROM "Application" a
+    JOIN LATERAL (
+      SELECT l."date", l."status"
+      FROM "LogItem" l
+      WHERE l."applicationId" = a."id"
+      ORDER BY l."date" DESC
+      LIMIT 1
+    ) li ON true
+    WHERE a."userId" = ${userId}
+      AND li."date" >= ${startDate}
+      AND li."status" != 'DRAFT'
+    GROUP BY li."status";
+  `;
+
+    // Build a numeric counts array aligned with `statuses`
+    const counts = statuses.map((s) => Number(results.find((r) => r.status === s)?.count || 0));
 
     return statuses.reduce(
       (acc, status, idx) => {
@@ -57,7 +61,7 @@ export class ChartService {
     const isAllTime = timeFrame === TimeFrameType.ALL_TIME;
     let periods: string[] = [];
 
-    // 🔹 Determine start date for all_time dynamically
+    // Determine start date for all_time dynamically
     let allTimeStartYear: number | null = null;
 
     if (isAllTime) {
@@ -87,7 +91,7 @@ export class ChartService {
       periods = getTimeFrameMonths(timeFrame);
     }
 
-    // 🔹 SQL grouping unit (month or year)
+    // SQL grouping unit (month or year)
     const dateTruncUnit = isAllTime ? 'year' : 'month';
 
     const results = await this.prisma.$queryRaw<
@@ -95,25 +99,24 @@ export class ChartService {
     >`
     SELECT
       DATE_TRUNC(${dateTruncUnit}, li."date") AS period,
-      a."status",
+      li."status" as status,
       COUNT(*) AS count
     FROM "Application" a
     JOIN LATERAL (
-      SELECT l."date"
+      SELECT l."date", l."status"
       FROM "LogItem" l
       WHERE l."applicationId" = a."id"
-        AND l."status" = a."status"
       ORDER BY l."date" DESC
       LIMIT 1
     ) li ON true
     WHERE a."userId" = ${userId}
       AND li."date" >= ${startDate}
-      AND a."status" != 'DRAFT'
-    GROUP BY period, a."status"
+      AND li."status" != 'DRAFT'
+    GROUP BY period, li."status"
     ORDER BY period ASC;
   `;
 
-    // 🔹 Map SQL results to chart data
+    // Map SQL results to chart data
     const barChartData = periods.map((label) => {
       const periodData = results.filter((r) => {
         const d = new Date(r.period);

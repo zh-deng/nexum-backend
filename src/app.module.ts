@@ -9,6 +9,9 @@ import { InterviewModule } from './interview/interview.module';
 import { CompanyModule } from './company/company.module';
 import { ApplicationModule } from './application/application.module';
 import { ChartModule } from './chart/chart.module';
+import { QueuesModule } from './queues/queues.module';
+import { PrismaModule } from '../prisma/prisma.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -22,6 +25,9 @@ import { ChartModule } from './chart/chart.module';
     InterviewModule,
     CompanyModule,
     ChartModule,
+    QueuesModule,
+    PrismaModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService],
