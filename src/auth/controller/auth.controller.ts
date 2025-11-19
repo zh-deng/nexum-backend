@@ -1,4 +1,6 @@
 import { Body, Controller, Get, HttpCode, Post, Res } from '@nestjs/common';
+import { UseGuards } from '@nestjs/common';
+import { RateLimit, RateLimitGuard } from '../../common/guards/rate-limit.guard';
 import { AuthService } from '../service/auth.service';
 import { LoginDto } from '../dto/login.dto';
 import { CreateUserDto } from '../../user/dtos/create-user.dto';
@@ -16,12 +18,16 @@ export class AuthController {
 
   @Public()
   @Post('signup')
+  @UseGuards(RateLimitGuard)
+  @RateLimit(3, 3600) // 3 signups per hour per IP
   async signup(@Body() dto: CreateUserDto) {
     return this.authService.signup(dto);
   }
 
   @Public()
   @Post('login')
+  @UseGuards(RateLimitGuard)
+  @RateLimit(5, 30) // 5 login attempts per 30 seconds per IP
   @HttpCode(200)
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
     const { access_token } = await this.authService.login(dto);

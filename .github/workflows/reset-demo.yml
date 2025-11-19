@@ -1,0 +1,34 @@
+name: Reset Demo Data Daily
+
+on:
+  schedule:
+    # Runs daily at 03:00 UTC (cron format: minute hour day month weekday)
+    - cron: '0 3 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions UI
+
+jobs:
+  reset-demo:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run demo reset
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DEMO_USER_EMAIL: ${{ secrets.DEMO_USER_EMAIL }}
+        run: pnpm run reset:demo

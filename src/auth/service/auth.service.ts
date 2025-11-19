@@ -14,6 +14,10 @@ export class AuthService {
 
   // Handles user registration
   async signup(dto: CreateUserDto) {
+    if (dto.signupAccessCode !== process.env.SIGNUP_ACCESS_CODE) {
+      throw new Error('Invalid signup access code');
+    }
+
     const existingUser = await this.userService.findUserByEmail(dto.email);
     if (existingUser) {
       throw new Error('User already exists');

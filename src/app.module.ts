@@ -12,11 +12,21 @@ import { ChartModule } from './chart/chart.module';
 import { QueuesModule } from './queues/queues.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { MailModule } from './mail/mail.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60,
+          limit: 30,
+        },
+      ],
     }),
     AuthModule,
     ApplicationModule,
@@ -30,6 +40,12 @@ import { MailModule } from './mail/mail.module';
     MailModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

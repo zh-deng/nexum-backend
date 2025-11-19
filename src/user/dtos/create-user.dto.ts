@@ -14,4 +14,8 @@ export class CreateUserDto {
   @IsString()
   @MinLength(6)
   password: string;
+
+  @ApiProperty()
+  @IsString()
+  signupAccessCode: string;
 }
