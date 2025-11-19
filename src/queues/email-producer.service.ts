@@ -1,6 +1,6 @@
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Job, Queue } from 'bullmq';
+import { Queue } from 'bullmq';
 import { scheduleAt } from '../utils/helpers';
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -13,13 +13,28 @@ export class EmailProducerService {
 
   async addReminderEmailJob(reminderId: string) {
     const reminder = await this.prisma.reminder.findUnique({
-      where: {
-        id: reminderId,
+      where: { id: reminderId },
+      include: {
+        application: {
+          select: {
+            user: {
+              select: { email: true, id: true },
+            },
+          },
+        },
       },
     });
 
     if (!reminder) {
       throw new NotFoundException('Reminder not found or access denied');
+    }
+
+    // If a demo user email is configured, skip creating jobs for that user to avoid background work.
+    const demoEmail = process.env.DEMO_USER_EMAIL;
+    const ownerEmail = reminder.application?.user?.email;
+    if (demoEmail && ownerEmail && demoEmail === ownerEmail) {
+      // Return the reminder without enqueueing a job or setting a jobId.
+      return reminder;
     }
 
     const reminderJob = await this.emailQueue.add('sendReminderEmail', reminder, {
