@@ -127,7 +127,7 @@ async function main(): Promise<void> {
             {
               status: ApplicationStatus.REJECTED,
               date: new Date(now - 2 * day),
-            }
+            },
           ],
         },
       },
@@ -618,6 +618,10 @@ async function main(): Promise<void> {
   console.log(`Seeded ${applications.length} applications for user ${user.username}`);
 }
 
+export { main };
+
+// Auto-execute when run directly (Prisma seed, ts-node, etc.)
+// Only skip execution if explicitly imported as a module (not via CLI)
 main()
   .then(async () => {
     await prisma.$disconnect();
