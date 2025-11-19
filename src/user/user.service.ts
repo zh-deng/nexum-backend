@@ -10,11 +10,14 @@ export class UserService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: CreateUserDto) {
-    const hashedPassword = await bcrypt.hash(data.password, 10);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { signupAccessCode, ...userData } = data;
+
+    const hashedPassword = await bcrypt.hash(userData.password, 10);
 
     const user = await this.prisma.user.create({
       data: {
-        ...data,
+        ...userData,
         password: hashedPassword,
       },
     });

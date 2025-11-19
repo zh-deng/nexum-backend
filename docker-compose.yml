@@ -6,33 +6,52 @@ services:
     container_name: nexum-postgres
     restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: nexumdb
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - '5433:5432'
+      - '${POSTGRES_EXPOSED_PORT:-5433}:${POSTGRES_PORT:-5432}'
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER}']
       interval: 5s
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7
+    container_name: nexum-redis
+    restart: always
+    ports:
+      - '${REDIS_PORT:-6379}:6379'
+    volumes:
+      - redisdata:/data
+
   backend:
-    build: .
+    build:
+      context: .
+      network: host
     container_name: nexum-backend
     restart: always
     ports:
-      - '5000:3000'
+      - '${BACKEND_EXPOSED_PORT:-5000}:${BACKEND_PORT:-3000}'
     depends_on:
       postgres:
         condition: service_healthy
         restart: true
     environment:
-      PORT: 3000
-      DATABASE_URL: postgres://postgres:password@postgres:5432/nexumdb
-      JWT_SECRET: ffe48445dc7be67ba4d1f1dfb4f144e49a8d0417e3bf3746668e0a67c13176e1
+      PORT: ${BACKEND_PORT}
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB}
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USER: ${MAIL_USER}
+      MAIL_PASS: ${MAIL_PASS}
+      SIGNUP_ACCESS_CODE: ${SIGNUP_ACCESS_CODE}
 
 volumes:
   pgdata:
+  redisdata:
