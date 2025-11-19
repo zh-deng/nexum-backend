@@ -29,7 +29,9 @@ services:
       - redisdata:/data
 
   backend:
-    build: .
+    build:
+      context: .
+      network: host
     container_name: nexum-backend
     restart: always
     ports:
