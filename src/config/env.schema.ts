@@ -25,4 +25,6 @@ export const envSchema = z.object({
     }),
 
   MAIL_PASS: z.string().min(1, { message: 'MAIL_PASS cannot be empty' }),
+
+  COOKIE_DOMAIN: z.string().min(1, { message: 'COOKIE_DOMAIN cannot be empty' }),
 });
