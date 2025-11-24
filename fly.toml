@@ -1,0 +1,47 @@
+# fly.toml app configuration file generated for nexum-backend
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+
+app = "nexum-backend"
+primary_region = "fra"  # Frankfurt
+
+[build]
+
+[deploy]
+  release_command = "npx prisma migrate deploy"
+
+[env]
+  PORT = "3000"
+  NODE_ENV = "production"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "off"  # Keep machines running
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/health"  # Make sure you have a health endpoint
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1
+
+# Secrets to set via fly secrets set:
+# - DATABASE_URL
+# - JWT_SECRET
+# - REDIS_HOST (from fly redis)
+# - REDIS_PORT
+# - MAIL_HOST
+# - MAIL_PORT
+# - MAIL_USER
+# - MAIL_PASS
+# - SIGNUP_ACCESS_CODE
+# - WEB_URL
