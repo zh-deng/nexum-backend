@@ -30,6 +30,7 @@ export class LogItemService {
 
     let interviewData = undefined;
 
+    // If the new log item is an INTERVIEW, create the associated Interview record
     if (data.status === ApplicationStatus.INTERVIEW) {
       const interviewDate = new Date(data.date);
 
@@ -94,7 +95,7 @@ export class LogItemService {
         const oldStatus = logItem.status;
         const newStatus = data.status ?? oldStatus;
 
-        // Case 1: log item switched TO INTERVIEW
+        // Case 1: log item switched to interview => create or update interview
         if (newStatus === ApplicationStatus.INTERVIEW) {
           const oldDate = logItem.date;
 
@@ -130,7 +131,7 @@ export class LogItemService {
           }
         }
 
-        // 🔹 Case 2: log item switched AWAY from INTERVIEW → delete interview
+        // Case 2: log item switched away from interview => delete interview
         if (
           oldStatus === ApplicationStatus.INTERVIEW &&
           newStatus !== ApplicationStatus.INTERVIEW
@@ -192,6 +193,7 @@ export class LogItemService {
           },
         });
 
+        // If deleting the last log item, create a DRAFT log item to maintain application integrity
         if (logItemCount === 1) {
           await tx.logItem.create({
             data: {
@@ -202,6 +204,7 @@ export class LogItemService {
           });
         }
 
+        // If the log item to be deleted is an INTERVIEW, delete the associated Interview record
         if (logItem.status === ApplicationStatus.INTERVIEW) {
           const oldInterview = await tx.interview.findFirst({
             where: {

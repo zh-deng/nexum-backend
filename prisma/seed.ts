@@ -1,7 +1,13 @@
+import 'dotenv/config';
 import { ApplicationStatus, InterviewStatus, PrismaClient, ReminderStatus } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
 
-const prisma = new PrismaClient();
+const connectionString = process.env.DATABASE_URL;
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 async function main(): Promise<void> {
   const hashedPassword = await bcrypt.hash('password', 10);
@@ -111,7 +117,7 @@ async function main(): Promise<void> {
         userId: user.id,
         jobLink: 'www.testsite2.com',
         jobDescription: 'Node.js microservices and PostgreSQL maintenance.',
-        status: 'APPLIED',
+        status: 'REJECTED',
         priority: 2,
         workLocation: 'HYBRID',
         notes: 'Recruiter reached out via email.',
@@ -218,7 +224,7 @@ async function main(): Promise<void> {
         userId: user.id,
         jobLink: 'www.testsite5.com',
         jobDescription: 'Building ETL pipelines and data warehousing.',
-        status: 'APPLIED',
+        status: 'REJECTED',
         priority: 2,
         workLocation: 'HYBRID',
         notes: 'Need to brush up on SQL window functions.',
@@ -516,7 +522,7 @@ async function main(): Promise<void> {
         userId: user.id,
         jobLink: 'www.testsite13.com',
         jobDescription: 'Building internal developer platforms and tooling.',
-        status: 'APPLIED',
+        status: 'REJECTED',
         priority: 2,
         workLocation: 'HYBRID',
         notes: 'Interesting internal platform roadmap.',

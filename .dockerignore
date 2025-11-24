@@ -1,4 +1,50 @@
+# Dependencies
 node_modules
-.env
+
+# Logs
 *.log
+npm-debug.log
+pnpm-debug.log
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Build output (will be built in container)
 dist
+
+# IDE
+.vscode
+.idea
+*.swp
+
+# OS
+.DS_Store
+
+# Git
+.git
+
+# Testing
+coverage
+test
+*.spec.ts
+*.test.ts
+
+# Documentation
+README.md
+
+# CI/CD
+.github
+
+# Local development
+docker-compose.yml
+
+# Husky
+.husky
+
+# Misc
+.prettierrc
+.eslintrc.js
+commitlint.config.js
+
