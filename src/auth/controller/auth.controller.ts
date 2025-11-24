@@ -30,7 +30,7 @@ export class AuthController {
   @RateLimit(5, 30) // 5 login attempts per 30 seconds per IP
   @HttpCode(200)
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
-    const { access_token } = await this.authService.login(dto);
+    const { access_token, user } = await this.authService.login(dto);
 
     res.cookie('access_token', access_token, {
       httpOnly: true,
@@ -40,7 +40,7 @@ export class AuthController {
       maxAge: 1000 * 60 * 60 * 24, // 1 day
     });
 
-    return { message: 'Login successful' };
+    return { message: 'Login successful', user };
   }
 
   @Public()
