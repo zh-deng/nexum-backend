@@ -1,7 +1,13 @@
+import 'dotenv/config';
 import { ApplicationStatus, InterviewStatus, PrismaClient, ReminderStatus } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
 
-const prisma = new PrismaClient();
+const connectionString = process.env.DATABASE_URL;
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 async function main(): Promise<void> {
   const hashedPassword = await bcrypt.hash('password', 10);

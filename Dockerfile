@@ -10,9 +10,13 @@ RUN apt-get update && apt-get install -y curl && \
 ENV PNPM_HOME="/root/.local/share/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 
+# Provide dummy DATABASE_URL for build time (Prisma v7 config requires it)
+ARG DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+ENV DATABASE_URL=$DATABASE_URL
+
 COPY . .
 RUN pnpm install --frozen-lockfile
-# Generate Prisma client
+# Generate Prisma client (Prisma v7)
 RUN npx prisma generate
 # Build NestJS app
 RUN pnpm build
@@ -26,8 +30,9 @@ RUN apt-get update -y && apt-get install -y openssl curl jq && rm -rf /var/lib/a
 
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
-# Copy Prisma schema (needed for runtime)
+# Copy Prisma schema and config (needed for runtime and Prisma v7)
 COPY prisma ./prisma
+COPY prisma.config.ts ./
 
 # Remove Husky scripts safely (jq is already installed above)
 RUN jq 'del(.scripts.prepare, .scripts.postinstall)' package.json > temp.json && mv temp.json package.json
@@ -38,13 +43,17 @@ RUN curl -fsSL https://get.pnpm.io/install.sh | env PNPM_VERSION=9.15.0 SHELL=/b
 ENV PNPM_HOME="/root/.local/share/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 
-# Install dependencies
+# Provide dummy DATABASE_URL for generate step
+ARG DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+ENV DATABASE_URL=$DATABASE_URL
+
+# Install dependencies (production only)
 RUN pnpm install --frozen-lockfile --prod
 
-# Install ts-node and typescript for seeding
-RUN pnpm add -D ts-node typescript @types/node
+# Install tsx, dotenv, and typescript for seeding (Prisma v7 uses tsx)
+RUN pnpm add -D tsx dotenv typescript @types/node
 
-# Generate Prisma client in runtime stage
+# Generate Prisma client in runtime stage (Prisma v7)
 RUN npx prisma generate
 
 # Copy compiled output
