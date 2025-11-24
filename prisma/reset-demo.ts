@@ -3,6 +3,7 @@ import { execSync } from 'child_process';
 
 const prisma = new PrismaClient();
 
+// Reset demo user and related data, then re-seed the database
 async function resetDemo() {
   const demoEmail = process.env.DEMO_USER_EMAIL ?? 'test@gmail.com';
 

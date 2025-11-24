@@ -9,9 +9,7 @@ type ApplicationWithRelations = Application & {
 };
 
 // Define status groups for sorting
-const DRAFT_STATUSES: ReadonlySet<ApplicationStatus> = new Set([
-  ApplicationStatus.DRAFT,
-]);
+const DRAFT_STATUSES: ReadonlySet<ApplicationStatus> = new Set([ApplicationStatus.DRAFT]);
 
 const END_STATUSES: ReadonlySet<ApplicationStatus> = new Set([
   ApplicationStatus.OFFER,
@@ -21,21 +19,14 @@ const END_STATUSES: ReadonlySet<ApplicationStatus> = new Set([
   ApplicationStatus.WITHDRAWN,
 ]);
 
-/**
- * Determines which status group an application belongs to
- */
+// Determines which status group an application belongs to
 function getStatusGroup(status: ApplicationStatus): 'draft' | 'middle' | 'end' {
   if (DRAFT_STATUSES.has(status)) return 'draft';
   if (END_STATUSES.has(status)) return 'end';
   return 'middle';
 }
 
-/**
- * Finds the most relevant log item date for sorting based on application status
- * 
- * @param application - The application to extract date from
- * @returns timestamp (milliseconds) or 0 if no relevant log item found
- */
+// Finds the most relevant log item date for sorting based on application status
 function getRelevantSortDate(application: ApplicationWithRelations): number {
   const { status, logItems } = application;
   const statusGroup = getStatusGroup(status);
@@ -54,7 +45,7 @@ function getRelevantSortDate(application: ApplicationWithRelations): number {
   }
 
   // Find the log item with the target status
-  const relevantLog = logItems.find(log => log.status === targetStatus);
+  const relevantLog = logItems.find((log) => log.status === targetStatus);
 
   if (relevantLog?.date) {
     return new Date(relevantLog.date).getTime();
@@ -64,19 +55,13 @@ function getRelevantSortDate(application: ApplicationWithRelations): number {
   return 0;
 }
 
-/**
- * Sorts applications by complex date logic with status grouping
- * 
- * @param applications - Array of applications with logItems included
- * @param direction - 'newest' for DATE_NEW, 'oldest' for DATE_OLD
- * @returns Sorted array of applications
- */
+// Sorts applications by complex date logic with status grouping
 export function sortApplicationsByDateComplex(
   applications: ApplicationWithRelations[],
   direction: 'newest' | 'oldest' = 'newest'
 ): ApplicationWithRelations[] {
   // Create enhanced items with sorting metadata
-  const enhancedApps = applications.map(app => ({
+  const enhancedApps = applications.map((app) => ({
     application: app,
     statusGroup: getStatusGroup(app.status),
     sortDate: getRelevantSortDate(app),
@@ -93,7 +78,7 @@ export function sortApplicationsByDateComplex(
 
     // Secondary sort: by date within the same group
     const dateDiff = a.sortDate - b.sortDate;
-    
+
     if (direction === 'newest') {
       // Newest first: higher timestamp = earlier in list
       // Special case: treat 0 (missing date) as oldest
@@ -112,19 +97,15 @@ export function sortApplicationsByDateComplex(
   });
 
   // Return just the applications, without metadata
-  return enhancedApps.map(item => item.application);
+  return enhancedApps.map((item) => item.application);
 }
 
-/**
- * Helper to check if a sort type requires complex date sorting
- */
+// Helper to check if a sort type requires complex date sorting
 export function requiresComplexDateSort(sortType: string): boolean {
   return sortType === 'DATE_NEW' || sortType === 'DATE_OLD';
 }
 
-/**
- * Maps sort type to direction for complex date sorting
- */
+// Maps sort type to direction for complex date sorting
 export function getComplexSortDirection(sortType: string): 'newest' | 'oldest' {
   return sortType === 'DATE_OLD' ? 'oldest' : 'newest';
 }

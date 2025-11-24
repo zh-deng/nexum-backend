@@ -69,8 +69,9 @@ export class ReminderService {
       const oldStatus = reminder.status;
       const newStatus = updatedReminder.status;
       const isActive = (status: ReminderStatus) => status === ReminderStatus.ACTIVE;
-      const jobId: string = (updatedReminder.jobId ?? '') as string;
+      const jobId: string = updatedReminder.jobId ?? '';
 
+      // Handle BullMQ job updates based on status changes
       if (isActive(oldStatus) && isActive(newStatus) && jobId) {
         await this.emailProducer.removeReminderEmailJob(jobId);
         await this.emailProducer.addReminderEmailJob(updatedReminder.id);
