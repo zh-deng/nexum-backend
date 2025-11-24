@@ -9,18 +9,13 @@ export const envSchema = z.object({
 
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 
-  JWT_SECRET: z
-    .string()
-    .min(1, { message: 'JWT_SECRET cannot be empty' }),
+  WEB_URL: z.string().min(1, { message: 'WEB_URL must be a valid URL' }),
 
-  MAIL_HOST: z
-    .string()
-    .min(1, { message: 'MAIL_HOST cannot be empty' }),
+  JWT_SECRET: z.string().min(1, { message: 'JWT_SECRET cannot be empty' }),
 
-  MAIL_PORT: z.coerce
-    .number()
-    .int()
-    .min(1, { message: 'MAIL_PORT must be a valid port number' }),
+  MAIL_HOST: z.string().min(1, { message: 'MAIL_HOST cannot be empty' }),
+
+  MAIL_PORT: z.coerce.number().int().min(1, { message: 'MAIL_PORT must be a valid port number' }),
 
   MAIL_USER: z
     .email()
@@ -29,7 +24,5 @@ export const envSchema = z.object({
       message: 'MAIL_USER cannot be empty',
     }),
 
-  MAIL_PASS: z
-    .string()
-    .min(1, { message: 'MAIL_PASS cannot be empty' }),
+  MAIL_PASS: z.string().min(1, { message: 'MAIL_PASS cannot be empty' }),
 });

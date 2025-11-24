@@ -23,6 +23,7 @@ export class RateLimitGuard implements CanActivate {
     const meta = this.reflector.get<RateLimitMeta>('rate_limit', context.getHandler());
     if (!meta) return true;
 
+    // Identify the client by IP address
     const req = context.switchToHttp().getRequest<Request>();
     const ip = (req.ip ||
       req.headers['x-forwarded-for'] ||
@@ -31,12 +32,14 @@ export class RateLimitGuard implements CanActivate {
     const key = `rl:${ip}:${context.getHandler().name}`;
     const now = Date.now();
 
+    // Get existing record or initialize
     const existing = this.store.get(key);
     if (!existing || existing.expiresAt <= now) {
       this.store.set(key, { count: 1, expiresAt: now + meta.ttlSeconds * 1000 });
       return true;
     }
 
+    // Check if limit exceeded
     if (existing.count >= meta.limit) {
       throw new HttpException(
         'Too many requests, please try again later',

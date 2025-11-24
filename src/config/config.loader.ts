@@ -6,7 +6,7 @@ export const validateEnv = () => {
 
   if (!parsed.success) {
     const tree = z.treeifyError(parsed.error);
-    console.error('❌ Invalid environment variables:', tree);
+    console.error('Invalid environment variables:', tree);
     process.exit(1);
   }
 

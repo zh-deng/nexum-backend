@@ -1,8 +1,15 @@
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 import { execSync } from 'child_process';
 
-const prisma = new PrismaClient();
+const connectionString = process.env.DATABASE_URL;
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
+// Reset demo user and related data, then re-seed the database
 async function resetDemo() {
   const demoEmail = process.env.DEMO_USER_EMAIL ?? 'test@gmail.com';
 

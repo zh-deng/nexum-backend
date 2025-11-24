@@ -7,6 +7,4 @@ import { ChartService } from "./chart.service";
   providers: [ChartService]
 })
 
-export class ChartModule {
-  
-}
+export class ChartModule {}

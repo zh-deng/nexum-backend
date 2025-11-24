@@ -1,6 +1,7 @@
 import { ApplicationStatus } from '@prisma/client';
 import { TimeFrameType } from '../types/enums';
 
+// Calculates the start date and relevant statuses based on the selected time frame
 export function calculateTimeFrame(timeFrame: TimeFrameType) {
   const statuses = [
     ApplicationStatus.APPLIED,
@@ -49,6 +50,7 @@ export function calculateTimeFrame(timeFrame: TimeFrameType) {
   };
 }
 
+// Generates an array of month labels based on the selected time frame
 export function getTimeFrameMonths(timeFrame: TimeFrameType) {
   const now = new Date();
   const formatter = new Intl.DateTimeFormat('en', { month: 'short' });
