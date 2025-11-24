@@ -40,7 +40,10 @@ export class AuthService {
       email: user.email,
     });
 
-    return { access_token: token, user: { username: user.username, email: user.email } };
+    return {
+      access_token: token,
+      user: { id: user.id, username: user.username, email: user.email },
+    };
   }
 
   async updateUser(userId: string, dto: UpdateUserDto) {
