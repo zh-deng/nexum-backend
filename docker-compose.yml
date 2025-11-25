@@ -52,6 +52,7 @@ services:
       MAIL_USER: ${MAIL_USER}
       MAIL_PASS: ${MAIL_PASS}
       SIGNUP_ACCESS_CODE: ${SIGNUP_ACCESS_CODE}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN}
 
 volumes:
   pgdata:
