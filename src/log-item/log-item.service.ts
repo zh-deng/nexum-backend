@@ -81,6 +81,7 @@ export class LogItemService {
         application: {
           select: {
             userId: true,
+            logItems: true,
           },
         },
       },
@@ -148,6 +149,17 @@ export class LogItemService {
               where: { id: oldInterview.id },
             });
           }
+        }
+
+        const mostRecentLogDate = new Date(logItem.application.logItems[0].date);
+        const newDate = new Date(data.date ?? Date.now());
+
+        // update application status if new log item is most recent
+        if (newDate > mostRecentLogDate) {
+          await this.prisma.application.update({
+            where: { id: logItem.applicationId },
+            data: { status: data.status },
+          });
         }
 
         // Always update the log item itself
