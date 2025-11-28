@@ -231,6 +231,25 @@ export class LogItemService {
           }
         }
 
+        const application = await this.prisma.application.findUnique({
+          where: { id: logItem.applicationId },
+          select: {
+            logItems: {
+              select: { date: true, status: true },
+              orderBy: { date: 'desc' },
+              take: 2,
+            },
+          },
+        });
+
+        // Update application status to next most recent log item's status
+        if (application && application.logItems.length > 1) {
+          await this.prisma.application.update({
+            where: { id: logItem.applicationId },
+            data: { status: application.logItems[1].status },
+          });
+        }
+
         return await tx.logItem.delete({
           where: { id: logItemId },
           include: { application: true },
