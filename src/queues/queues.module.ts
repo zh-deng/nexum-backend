@@ -4,18 +4,22 @@ import { EmailProducerService } from './email-producer.service';
 import { EmailProcessor } from './email.processor';
 import { MailModule } from '../mail/mail.module';
 
+const redisUrl = new URL(process.env.REDIS_URL!);
+
 @Module({
   imports: [
     BullModule.forRoot({
       connection: {
-        host: process.env.REDIS_HOST,
-        port: Number(process.env.REDIS_PORT),
+        host: redisUrl.hostname,
+        port: Number(redisUrl.port),
+        password: redisUrl.password,
+        username: redisUrl.username,
       },
     }),
     BullModule.registerQueue({
       name: 'email',
     }),
-    MailModule
+    MailModule,
   ],
   providers: [EmailProducerService, EmailProcessor],
   exports: [BullModule, EmailProducerService],
