@@ -2,9 +2,8 @@ name: Reset Demo Data Daily
 
 on:
   schedule:
-    # Runs daily at 03:00 UTC (cron format: minute hour day month weekday)
-    - cron: '45 23 * * *'
-      timeZone: 'Europe/Berlin'
+    # Runs daily at 21:45 UTC (cron format: minute hour day month weekday)
+    - cron: '45 21 * * *'
   workflow_dispatch: # Allows manual trigger from GitHub Actions UI
 
 jobs:
