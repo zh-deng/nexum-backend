@@ -14,6 +14,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { MailModule } from './mail/mail.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { APP_GUARD } from '@nestjs/core';
     QueuesModule,
     PrismaModule,
     MailModule,
+    AiModule
   ],
   controllers: [AppController],
   providers: [
