@@ -2,7 +2,7 @@
 set -e
 
 echo "Running database migrations..."
-npx prisma migrate deploy
+npx prisma migrate deploy &
 
 echo "Starting application..."
-exec node dist/src/main --port ${PORT:-3000} "$@"
+exec "$@"
