@@ -27,4 +27,8 @@ export const envSchema = z.object({
   MAIL_PASS: z.string().min(1, { message: 'MAIL_PASS cannot be empty' }),
 
   COOKIE_DOMAIN: z.string().min(1, { message: 'COOKIE_DOMAIN cannot be empty' }),
+
+  // Optional: Upstream FastAPI connectivity
+  FASTAPI_BASE_URL: z.url({ message: 'FASTAPI_BASE_URL must be a valid URL' }).optional(),
+  FASTAPI_INTERNAL_TOKEN: z.string().optional(),
 });
